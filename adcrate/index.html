@@ -168,4 +168,13 @@ function payout(){if(S.money<1)return toast('need at least $1.00 to cash out');t
 setInterval(()=>{let gain=0;S.ads.forEach(a=>{if(!a.on)return;const b=Math.min(a.bid,10);const v=Math.floor(Math.random()*25*(1+b*4)*(a.play?2:1));a.imp+=v;const p=Math.min(.5,.03+b*.02);const c=Math.round(v*p*(0.6+Math.random()*.8));a.clk+=c;const g=c*a.bid+v*.0005;a.earn+=g;gain+=g});
  gain*=boost();lastGain=lastGain*.7+gain*.3;if(gain){S.money+=gain;S.hist[6]+=gain;save();if(cur=='ads'||cur=='earn'||cur=='pay')render();else $('hm').textContent=fm(S.money)}},1000);
 render();
-</script></body></html>
+</script>
+<!-- Maxcade home tab -->
+<a id="mx-home" href="/#games" aria-label="Back to Maxcade Games"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Home</span></a>
+<style>
+#mx-home{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483647;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 7px 12px 5px;background:rgba(17,17,17,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.14);border-left:0;border-radius:0 12px 12px 0;color:#fff;text-decoration:none;font:600 10px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;letter-spacing:.04em;-webkit-tap-highlight-color:transparent;user-select:none}
+#mx-home span{writing-mode:vertical-rl;transform:rotate(180deg)}
+#mx-home:active{background:rgba(17,17,17,.95)}
+</style>
+<script>document.getElementById('mx-home').addEventListener('click',function(){try{window.dispatchEvent(new Event('pagehide'))}catch(e){}});</script>
+</body></html>
