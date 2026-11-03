@@ -1,1 +1,3 @@
-# Maxcadestudios.GitHub.io
+# Maxcade Games
+
+Official website of Maxcade Games.
