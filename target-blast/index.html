@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Target Blast</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif;user-select:none;-webkit-user-select:none;touch-action:none}
+canvas{display:block;position:fixed;left:0;top:0;width:100%}
+#ui{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;background:rgba(20,5,40,.85)}
+h1{font-size:44px;margin:0 0 8px}p{font-size:18px;margin:5px}
+button{font-size:30px;padding:18px 54px;margin:14px;border:0;border-radius:16px;background:#27ae60;color:#fff;font-weight:800}
+
+.menu{background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 14px,transparent 14px 28px),radial-gradient(circle at 50% 25%,#5b1f8f,#16062b 70%)!important;justify-content:flex-start!important;overflow-y:auto;padding:0 0 20px}
+.bunt{width:100%;height:34px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='34'%3E%3Cpath d='M0 0h40L20 34z' fill='%23c0392b'/%3E%3Cpath d='M40 0h40L60 34z' fill='%23ecf0f1'/%3E%3C/svg%3E") repeat-x}
+.bulbs{display:flex;gap:14px;justify-content:center;margin:6px 0 4px}.bulbs i{width:10px;height:10px;border-radius:50%;background:#f1c40f;box-shadow:0 0 10px #f1c40f;animation:bl 1s infinite}.bulbs i:nth-child(2n){animation-delay:.5s;background:#e67e22;box-shadow:0 0 10px #e67e22}
+@keyframes bl{50%{opacity:.25}}
+.ttl{font-size:52px;font-weight:900;line-height:.95;margin:14px 0 4px;background:linear-gradient(#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #8e1b1b) drop-shadow(0 8px 14px rgba(0,0,0,.5));animation:wb 2.4s ease-in-out infinite}
+@keyframes wb{50%{transform:rotate(-2deg) scale(1.03)}}
+.gun{font-size:56px;margin-top:10px;animation:wb 2.4s ease-in-out infinite reverse}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 12px 16px;max-width:380px}.chips span{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 10px;font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(380px,92vw)}
+.mc{margin:0!important;padding:12px 10px!important;min-width:0!important;text-align:left;font-size:16px!important;background:rgba(15,5,30,.7)!important;border:2px solid var(--c)!important;border-radius:16px!important;box-shadow:0 4px 0 var(--c),0 8px 18px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:3px;transition:transform .1s}
+.mc:active{transform:translateY(3px);box-shadow:0 1px 0 var(--c)}
+.mc b{font-size:17px}.mc small{font-size:12px;opacity:.7;font-weight:500}.mc em{font-style:normal;font-size:12px;color:#f1c40f}
+
+.ban{width:min(380px,92vw);margin-top:14px;position:sticky;bottom:8px;box-shadow:0 4px 20px rgba(0,0,0,.6);z-index:2;background:#fff;color:#111;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:10px;text-align:left;position:relative;cursor:pointer;flex:none}
+.ban .e{font-size:30px}.ban b{font-size:14px}.ban div{font-size:12px;opacity:.75}.adtag{position:absolute;top:3px;right:6px;font-size:10px;background:#f1c40f;color:#000;padding:1px 5px;border-radius:4px;font-weight:800}
+#ad{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px;box-sizing:border-box;z-index:9}
+#ad .big{font-size:110px;animation:wb 1.2s ease-in-out infinite}#ad h1{font-size:34px}#ad p{max-width:330px}
+#skip{position:absolute;top:16px;right:14px;background:rgba(0,0,0,.6);font-size:16px;padding:8px 14px;margin:0;border-radius:20px}
+#adl{position:absolute;top:18px;left:14px;font-size:12px;background:#f1c40f;color:#000;padding:3px 8px;border-radius:5px;font-weight:800}
+#adbtn{font-size:22px;padding:14px 34px;background:#fff;color:#111}
+
+.fl{position:absolute;bottom:-60px;font-size:40px;opacity:.35;animation:up linear infinite}@keyframes up{to{transform:translateY(-120vh) rotate(360deg)}}
+#adp{position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,.2)}#adpf{height:100%;background:#f1c40f;width:0;transition:width .5s linear}
+#ads{position:relative;z-index:2}.slide{animation:pop .4s}@keyframes pop{from{transform:scale(.6);opacity:0}}
+.feat{background:rgba(0,0,0,.35);border-radius:12px;padding:10px 16px;margin:8px auto;font-size:18px;max-width:300px;text-align:left}
+.stars{font-size:28px;margin-top:14px}.was{text-decoration:line-through;opacity:.6;font-size:20px;margin:0}.now{font-size:44px;font-weight:900;color:#f1c40f;margin:4px 0}
+.hurry{color:#ff7675;font-weight:800;animation:bl .6s infinite}.fine{font-size:11px;opacity:.6;margin-top:14px}
+#gban2{position:fixed;bottom:0;left:0;right:0;height:46px;margin:0;width:100%;border-radius:0;padding:4px 10px;box-sizing:border-box;display:none;top:auto}#gban2 .e{font-size:24px}#gban2 b{font-size:13px}#gban2 div{font-size:11px}
+#gban{position:fixed;top:0;left:0;right:0;height:46px;margin:0;width:100%;border-radius:0;padding:4px 10px;box-sizing:border-box;display:none}
+#gban .e{font-size:24px}#gban b{font-size:13px}#gban div{font-size:11px}
+
+#site{position:fixed;inset:0;z-index:20;background:#fff;color:#111;display:none;flex-direction:column;font-family:system-ui,sans-serif}
+#site .bar{display:flex;align-items:center;gap:8px;padding:8px;background:#e9e9ee;border-bottom:1px solid #ccc;flex:none}
+#site .bk{margin:0;min-width:0;padding:6px 12px;font-size:18px;background:#fff;color:#111;border-radius:10px}
+#site .url{flex:1;background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#site .pg{overflow-y:auto;flex:1;padding-bottom:30px}
+#site .nav{display:flex;justify-content:space-between;padding:12px 16px;color:#fff;font-size:16px}
+#site .hero{color:#fff;text-align:center;padding:24px 16px 30px}#site .hero h1{font-size:34px;margin:4px 0}#site .hero p{font-size:16px}
+#site .pr{font-size:36px!important;font-weight:900;color:#f1c40f}
+#site .buy{background:#f1c40f;color:#111;font-size:22px;padding:14px 30px;margin:6px}
+#site h2{font-size:20px;margin:22px 16px 8px}
+#site .ft,#site .rv{margin:8px 16px;padding:12px 14px;background:#f2f2f5;border-radius:12px;font-size:15px}
+#site .rv div{font-size:14px;margin-bottom:4px}
+#site .gl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px}#site .gl div{background:#f2f2f5;border-radius:10px;padding:10px;font-size:14px;font-weight:700}
+#site .foot{text-align:center;font-size:12px;color:#888;margin-top:26px}
+</style></head><body>
+<canvas id="c"></canvas>
+<button id="pb" onclick="pause()" style="display:none;position:fixed;top:94px;left:50%;transform:translateX(-50%);margin:0;padding:6px 14px;font-size:22px;background:rgba(0,0,0,.45);border-radius:12px">⏸</button><div class="ban" id="gban" onclick="fakeTap(this)"></div><div class="ban" id="gban2" onclick="fakeTap(this)"></div><div id="ui"></div><div id="ad"></div><div id="site"></div><div id="adcnt" style="display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:15;background:#f1c40f;color:#000;font-weight:900;padding:6px 14px;border-radius:20px;font-size:16px"></div>
+<script>
+const pb=document.getElementById('pb');let paused=false;const c=document.getElementById('c'),x=c.getContext('2d'),ui=document.getElementById('ui');
+let OFFB=0,W,H,OFF=0,D=devicePixelRatio||1;function rs(){W=innerWidth;H=innerHeight-OFF-OFFB;c.style.top=OFF+'px';c.style.height=H+'px';c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0)}rs();onresize=rs;
+let ac;function snd(f,d,type,v){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type=type||'square';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f/4),t+d);g.gain.setValueAtTime(v||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d)}
+function bang(){if(!ac)return;const n=ac.sampleRate*.15,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const s=ac.createBufferSource(),g=ac.createGain();g.gain.value=.35;s.buffer=b;s.connect(g).connect(ac.destination);s.start()}
+const MODES={
+ easy:{d:'slow targets · 8 ammo',n:'😊 EASY',c:'#27ae60',ammo:8,time:45,spd:.6,hit:1.1,bomb:.08,gold:.04,miss:0,reload:.5,spawn:1.25,bp:15,bt:3,mult:1},
+ medium:{d:'a fair fight',n:'😐 MEDIUM',c:'#f39c12',ammo:6,time:40,spd:.8,hit:.95,bomb:.15,gold:.04,miss:1,reload:.8,spawn:1.05,bp:25,bt:5,mult:1},
+ hard:{d:'fast + lots of bombs',n:'😈 HARD',c:'#c0392b',ammo:5,time:35,spd:1,hit:.8,bomb:.24,gold:.04,miss:3,reload:1.1,spawn:1,bp:40,bt:7,mult:1},
+ infinite:{d:'never reload',n:'♾️ INFINITE AMMO',c:'#2980b9',ammo:6,time:40,spd:.9,hit:.9,bomb:.18,gold:0,miss:1,reload:0,spawn:.85,bp:30,bt:5,mult:1,inf:1},
+ endless:{d:'3 lives · no timer',n:'❤️ ENDLESS',c:'#e84393',ammo:6,time:0,spd:.75,hit:.95,bomb:.18,gold:.04,miss:0,reload:.8,spawn:1.05,bp:0,bt:0,mult:1,endless:1},
+ sniper:{d:'1 bullet · 3x points',n:'🔭 SNIPER',c:'#2c3e50',ammo:1,time:40,spd:.7,hit:.55,bomb:.15,gold:.03,miss:5,reload:.7,spawn:1.2,bp:40,bt:5,mult:3},
+ gold:{d:'tons of rapid fire',n:'⭐ GOLD RUSH',c:'#d4a017',ammo:6,time:30,spd:.9,hit:.9,bomb:.12,gold:.3,miss:1,reload:.8,spawn:.9,bp:30,bt:5,mult:1},
+ bombs:{d:'bombs everywhere · 2x',n:'💣 BOMB FRENZY',c:'#6c5ce7',ammo:6,time:40,spd:.85,hit:.9,bomb:.5,gold:.03,miss:1,reload:.8,spawn:.75,bp:50,bt:6,mult:2}
+};let adClock=0,MD,mk,MAXA=5,lives=0,el=0;let T=[],P=[],F=[],HOLES=[],shots=0,hits=0,rapid=0,hm=0,hmx=0,hmy=0,score,ammo,time,combo,best=0,running=false,aim={x:0,y:0},flash=0,reloading=0,shake=0,last,spawnT;
+const ADS=[
+['🥤','MEGA FIZZ SODA','now with 400% more fizz. may cause burping into space.','#e74c3c','BURP NOW'],
+['🦆','DUCK INSURANCE','got shot at a carnival? we got you. ducks only.','#f39c12','GET COVERED'],
+['💣','BOMB-B-GONE SPRAY','spray it on bombs. does nothing.','#2c3e50','BUY 10'],
+['🧦','INFINITE AMMO SOCKS','your feet will never need to reload again.','#8e44ad','SOCK UP'],
+['🐐','BAD GOAT DAY','headbutt everything. rated G for GOAT.','#27ae60','PLAY FREE'],
+['🚓','FIVE STAR GETAWAY','the cops are coming. they always are.','#2980b9','RUN NOW'],
+['🎯','TARGET BLAST PRO','targets say sorry when you miss.','#c0392b','UPGRADE'],
+['⏰','EXTRA TIME™','buy 3 seconds. limited time (3 seconds).','#16a085','BUY TIME'],
+['🧠','BIG BRAIN PILLS','they are just candy. IQ +0.','#d35400','GET SMART'],
+['🪑','A CHAIR','its a chair. you sit on it.','#7f8c8d','SIT DOWN'],
+['🍕','PIZZA PHONE','a phone made of pizza. calls get greasy.','#e67e22','ORDER NOW'],
+['🐸','FROG ALARM CLOCK','wakes you up by yelling RIBBIT at 4am.','#2ecc71','WAKE UP'],
+['🧻','LUXURY AIR','a bag of premium air. from a mountain probably.','#74b9ff','BREATHE'],
+['🥾','JUMP BOOTS 3000','jump 1 inch higher. results may vary.','#6c5ce7','JUMP'],
+['🦷','TOOTH WIFI','your teeth get wifi. 1 bar.','#00cec9','CONNECT'],
+['🍌','BANANA PHONE CASE','looks like a banana. is a banana.','#fdcb6e','PEEL'],
+['🐌','SNAIL MAIL+','we deliver in 6-8 years. guaranteed-ish.','#a29bfe','SEND'],
+['🥶','ICE CUBE DELUXE','its ice. we froze it ourselves.','#81ecec','FREEZE'],
+['🤖','HOMEWORK ROBOT','does your homework wrong but fast.','#636e72','HIRE'],
+['🧃','JUICE BOX XL','a juice box the size of a fridge.','#ff7675','SIP'],
+['🛏️','NAP SIMULATOR','a game where you sleep. thats it.','#2d3436','SNOOZE'],
+['🐟','FISH GPS','helps fish find their way. fish not included.','#0984e3','NAVIGATE'],
+['🦖','PET DINO','its a lizard wearing a costume.','#00b894','ADOPT'],
+['🍦','SPICY ICE CREAM','ghost pepper vanilla. you will cry.','#e17055','TASTE'],
+['📦','EMPTY BOX','a box. nothing inside. very exclusive.','#b2bec3','UNBOX'],
+['🎩','MAGIC HAT','pulls out a rabbit. sometimes a sock.','#2d3436','ABRACADABRA'],
+['🚀','SPACE GUM','chew it in space. flavor lasts 1 second.','#6c5ce7','CHEW'],
+['🐱','CAT TRANSLATOR','every translation says "feed me".','#fab1a0','TRANSLATE'],
+['🧲','SUPER MAGNET','sticks to your fridge. and your car. and you.','#d63031','ATTRACT'],
+['🌮','TACO TRUCK FINDER','its just a map with tacos drawn on it.','#fdcb6e','FIND TACOS'],
+['🦄','UNICORN FOOD','its cereal. with glitter. do not eat glitter.','#fd79a8','MUNCH'],
+['🔋','FOREVER BATTERY','lasts forever. (forever = 2 hours)','#00b894','CHARGE'],
+['🧸','ANGRY TEDDY','a teddy bear that judges you.','#e17055','HUG?'],
+['🕶️','INVISIBLE GLASSES','you cant see them. neither can we.','#2d3436','LOOK'],
+['🐔','CHICKEN PHONE','every ringtone is a chicken.','#ffeaa7','BAWK'],
+['💨','FART SPRAY','smells like a new car. a new farting car.','#55efc4','SPRAY'],
+['🪥','TALKING TOOTHBRUSH','tells you jokes while you brush. bad jokes.','#74b9ff','BRUSH'],
+['🍩','DONUT TIRES','tires made of donuts. sticky ride.','#e84393','ROLL'],
+['🧊','LAWN GUARD','stop the zombies. save the lawn.','#00b894','DEFEND'],
+['✈️','SHORT HOP AIR','flights so short you dont get peanuts.','#0984e3','FLY'],
+['🛹','KICKFLIP ISLAND','skate an island. fall off a lot.','#fdcb6e','SKATE'],
+['🛒','AISLE NINE MARKET','run a supermarket. aisle nine is always out.','#e67e22','SHOP'],
+['🚌','METRO MAYHEM','drive a bus. pull the cord. ding ding.','#f1c40f','RIDE'],
+['🏌️','LOOPSIDE LINKS','mini golf with loops. so many loops.','#27ae60','PUTT'],
+['🧹','ROBO BROOM','sweeps your room. then sweeps you.','#636e72','CLEAN'],
+['🎈','GRAVITY BALLOON','floats down instead of up. revolutionary.','#ff7675','FLOAT'],
+['🐢','TURBO TURTLE','the fastest turtle. still slow.','#00b894','ZOOM'],
+['🥔','POTATO PRO MAX','its a potato. 5G not supported.','#b8860b','UPGRADE'],
+['👟','SILENT SNEAKERS','squeak 100% louder than regular sneakers.','#d63031','SQUEAK'],
+['🦜','PARROT ECHO','repeats everything. forever. forever. forever.','#00cec9','REPEAT'],
+['🌧️','RAIN IN A JAR','its water. we put it in a jar.','#74b9ff','POUR'],
+['🍔','BURGER HAT','wear a burger. smell like a burger.','#e67e22','WEAR'],
+['🧪','MYSTERY GOO','we dont know what it is either.','#00b894','POKE'],
+['📏','LONGER RULER','13 inches. we added one. youre welcome.','#fdcb6e','MEASURE'],
+['🦔','HEDGEHOG PILLOW','very cute. very pointy.','#a1887f','SNUGGLE'],
+['🎮','BROKEBOX','the free console. its broke but its free.','#6c5ce7','PLAY']
+];
+const GC=[
+['🎮','GAME CRATE','every game. one crate. totally free.'],
+['📦','GAME CRATE','why buy a console when you can open a crate?'],
+['🕹️','GAME CRATE','tons of cartridges. zero dollars.'],
+['🐐','BAD GOAT DAY on GAME CRATE','headbutt your way through it. only on Game Crate.'],
+['🚓','FIVE STAR GETAWAY on GAME CRATE','5 stars. 0 escape plans. play it on Game Crate.'],
+['🛒','AISLE NINE MARKET on GAME CRATE','run the store. aisle nine is still out.'],
+['📮','POST OFFICE TYCOON on GAME CRATE','deliver mail. become a tycoon. Game Crate.'],
+['🧟','LAST GATE on GAME CRATE','the apocalypse is here. so is Game Crate.'],
+['🌱','LAWN GUARD on GAME CRATE','zombies vs your lawn. lawn wins (maybe).'],
+['🚸','CROSSWALK CAPTAIN on GAME CRATE','stop the cars. save the kids. be the captain.'],
+['🔧','TECH REPAIR SIMULATOR on GAME CRATE','fix phones. break more phones. Game Crate.'],
+['🏈','TWO MINUTE DRILL on GAME CRATE','2 minutes. 1 touchdown. Game Crate.'],
+['🆕','NEW ON GAME CRATE','new cartridges drop all the time. check the NEW tag.'],
+['🔍','GAME CRATE','search bar. filters. every game. it has it all.'],
+['🎵','GAME CRATE','the menu music is a 9/10. come listen.'],
+['📱','GAME CRATE','add it to your home screen. play anywhere.'],
+['💻','GAME CRATE','works on phones AND computers now.'],
+['⏳','COMING SOON to GAME CRATE','new games are on the way. check the Coming soon shelf.']
+];
+const GCF=['100% free','new games added all the time','works on phone + computer','no download needed','made by Maxcade developers','search + filters','NEW and recently updated tags','home screen app ready'];
+const GCR=['"best crate ever" - a goat','"i played for 6 hours" - Kyle','"better than a PS5 (it is free)" - Dave','"my brother wont stop playing" - Max','"10/10 crate" - Sue','"the menu music slaps" - Ray'];
+const AFEAT=['100% real (not real)','approved by 3 ducks','works sometimes','now in beige','comes with a sticker','no batteries needed (it needs batteries)','dishwasher scared','made in a garage','faster than a snail','smells like Tuesday','glow in the dark (only in daylight)','waterproof-ish','scientists hate it','your mom will say no','includes free air','limited edition (we made 9 million)'];
+const AREV=['"my dog likes it" - Dave','"it arrived. thats all." - Sue','"i bought 40" - Kyle','"5 stars, it exists" - Bob','"my grandma cried" - Tim','"i dont know why i bought this" - Jen','"better than nothing" - Ray','"it ate my homework" - Max','"10/10 would get scammed again" - Lou'];
+let banT;
+const rpick=a=>a[Math.floor(Math.random()*a.length)];
+const GCC=['#6c5ce7','#0984e3','#00b894','#e17055','#d63031'];
+function rAd(){if(Math.random()<.4){const g=rpick(GC);return [g[0],g[1],g[2],rpick(GCC),'PLAY FREE',1]}return rpick(ADS)}
+const AC=[];
+function banHTML(){const a=rAd();AC.push(a);return '<span class="adtag" data-k="'+(AC.length-1)+'">AD</span><span class="e">'+a[0]+'</span><span><b>'+a[1]+'</b><div>'+a[2]+'</div></span>'}
+function banner(){document.querySelectorAll('.ban').forEach(b=>{b.innerHTML=banHTML()})}
+function fakeTap(el){const k=el.querySelector('[data-k]');if(!k)return;const a=AC[+k.dataset.k];
+ const wasRun=running&&!paused;if(wasRun){paused=true;pb.style.display='none'}
+ showSite(a,()=>{if(wasRun&&running&&paused&&ui.style.display=='none')resume()})}
+function showSite(a,after){const gc=!!a[5];let cart=0;
+ const nm=a[1].replace(/ on GAME CRATE/,'');const url=gc?'maxaboiinyc5-wq.github.io':nm.toLowerCase().replace(/[^a-z0-9]/g,'')+'.fake';
+ const s=document.getElementById('site');s.style.display='flex';
+ const feats=[...(gc?GCF:AFEAT)].sort(()=>Math.random()-.5).slice(0,4);
+ const revs=[...(gc?GCR:AREV)].sort(()=>Math.random()-.5).slice(0,3);
+ const price=gc?'FREE':'$'+(Math.random()*90+9.99).toFixed(2);
+ const games=['🐐 Bad Goat Day','🚓 Five Star Getaway','🛒 Aisle Nine Market','📮 Post Office Tycoon','🧟 Last Gate','🌱 Lawn Guard','🚸 Crosswalk Captain','🔧 Tech Repair Simulator','🏈 Two Minute Drill','🎮 Brokebox'];
+ const faq=gc?[['is it really free?','yes. 100%. go play.'],['does it work on computer?','yep, phones and computers.'],['are there new games?','all the time. look for the NEW tag.']]
+  :[['is this real?','no. its imaginary. like your money.'],['do you ship?','we ship to imaginary addresses only.'],['refunds?','sure. we refund imaginary dollars.']];
+ s.innerHTML='<div class="bar"><button class="bk" id="sb">←</button><div class="url">🔒 '+url+'</div><button class="bk" id="sx">✕</button></div>'+
+ '<div class="pg"><div class="nav" style="background:'+a[3]+'"><b>'+a[0]+' '+nm+'</b>'+(gc?'<span>▶ PLAY</span>':'<span>🛒 <span id="cc">0</span></span>')+'</div>'+
+ '<div class="hero" style="background:linear-gradient(160deg,'+a[3]+',#111)"><div style="font-size:110px">'+a[0]+'</div><h1>'+nm+'</h1><p>'+a[2]+'</p><p class="pr">'+price+'</p><button class="buy" id="buy">'+(gc?'▶ PLAY FREE':'🛒 ADD TO CART')+'</button></div>'+
+ (gc?'<h2>🎮 GAMES ON THE SHELF</h2><div class="gl">'+games.map(g=>'<div>'+g+'</div>').join('')+'</div>':'')+
+ '<h2>✨ FEATURES</h2>'+feats.map(f=>'<div class="ft">✅ '+f+'</div>').join('')+
+ '<h2>⭐ REVIEWS</h2>'+revs.map(r=>'<div class="rv"><div>⭐⭐⭐⭐⭐</div>'+r+'</div>').join('')+
+ '<h2>❓ FAQ</h2>'+faq.map(q=>'<div class="ft"><b>'+q[0]+'</b><br>'+q[1]+'</div>').join('')+
+ '<div class="foot">© 2026 '+(gc?'Maxcade developers':'Imaginary Inc.')+' · '+url+'<br>'+(gc?'':'this website is not real. nothing here is real.')+'</div></div>';
+ const close=()=>{s.style.display='none';s.innerHTML='';after()};
+ document.getElementById('sb').onclick=close;document.getElementById('sx').onclick=close;
+ document.getElementById('buy').onclick=e=>{if(gc){e.target.textContent='🎮 go to '+url;return}cart++;document.getElementById('cc').textContent=cart;e.target.textContent='✅ added! ('+cart+' in imaginary cart)'}}
+function startBanners(){banner();clearInterval(banT);banT=setInterval(banner,4000)}
+const PLAYS=[
+ {g:'BAD GOAT DAY',e:'🐐',mode:'tap',it:'📦',bg:'#27ae60',tip:'TAP the crates to headbutt them!'},
+ {g:'LAWN GUARD',e:'🌱',mode:'defend',it:'🧟',bg:'#2d7a3a',tip:'TAP the zombies before they reach your lawn!'},
+ {g:'LAST GATE',e:'🧟',mode:'defend',it:'🧟‍♂️',bg:'#4a3b2a',tip:'TAP zombies before they break the gate!'},
+ {g:'FIVE STAR GETAWAY',e:'🚗',mode:'dodge',it:'🚓',bg:'#34495e',tip:'DRAG to dodge the cops!'},
+ {g:'METRO MAYHEM',e:'🚌',mode:'dodge',it:'🚧',bg:'#7f8c8d',tip:'DRAG the bus around the cones!'},
+ {g:'AISLE NINE MARKET',e:'🛒',mode:'catch',it:'🍎',bad:'💣',bg:'#e67e22',tip:'DRAG the cart to catch groceries! avoid bombs'},
+ {g:'POST OFFICE TYCOON',e:'📮',mode:'catch',it:'✉️',bad:'🐕',bg:'#c0392b',tip:'DRAG to catch the mail! avoid dogs'},
+ {g:'TWO MINUTE DRILL',e:'🏈',mode:'dodge',it:'🛡️',bg:'#1e8449',tip:'DRAG to run past the defenders!'},
+ {g:'CROSSWALK CAPTAIN',e:'🚸',mode:'tap',it:'🚗',bg:'#566573',tip:'TAP the cars to stop them!'}
+];
+function showPlayable(after){const P=rpick(PLAYS),ad=document.getElementById('ad');ad.style.display='flex';ad.style.background=P.bg;
+ ad.innerHTML='<span id="adl">PLAYABLE AD · '+P.g+'</span><button id="skip" disabled></button><div id="phud" style="position:absolute;top:56px;left:0;right:0;font-size:22px;font-weight:800"></div><canvas id="pc" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas><div id="ptip" style="position:absolute;bottom:40px;left:0;right:0;font-size:20px;font-weight:800;pointer-events:none;text-shadow:0 2px 6px #000">👆 '+P.tip+'</div>';
+ const cv=document.getElementById('pc'),cx=cv.getContext('2d'),sk=document.getElementById('skip'),hud=document.getElementById('phud');
+ const PW=innerWidth,PH=innerHeight,dpr=devicePixelRatio||1;cv.width=PW*dpr;cv.height=PH*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+ let t=0,sc=0,hp=3,ob=[],pl={x:PW/2},spT=0,lt=performance.now(),done=false,fx=[];const LEN=30;
+ const ptr=e=>{const px=e.clientX,py=e.clientY;if(done)return;
+  if(P.mode=='tap'||P.mode=='defend'){for(let i=ob.length-1;i>=0;i--){const o=ob[i];if(Math.hypot(o.x-px,o.y-py)<36){ob.splice(i,1);sc+=10;fx.push({x:px,y:py,l:.5,t:'+10'});snd(800,.08,'triangle',.15);break}}}
+  else pl.x=Math.max(30,Math.min(PW-30,px)); document.getElementById('ptip').style.opacity=0};
+ cv.addEventListener('pointerdown',ptr);cv.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType=='touch')if(P.mode=='dodge'||P.mode=='catch')ptr(e)});
+ function spawnO(){if(P.mode=='tap')ob.push({x:40+Math.random()*(PW-80),y:140+Math.random()*(PH-260),l:1.4,k:P.it});
+  else if(P.mode=='defend')ob.push({x:PW+30,y:140+Math.random()*(PH-260),vx:-(60+t*4),k:P.it});
+  else if(P.mode=='dodge')ob.push({x:30+Math.random()*(PW-60),y:-30,vy:180+t*8,k:P.it});
+  else {const bad=Math.random()<.25;ob.push({x:30+Math.random()*(PW-60),y:-30,vy:160+t*6,k:bad?P.bad:P.it,bad})}}
+ function fin(){done=true;cv.remove();document.getElementById('ptip').remove();hud.remove();clearInterval(sti);
+  ad.style.background='radial-gradient(circle,'+P.bg+',#000)';
+  const box=document.createElement('div');box.style.cssText='position:relative;z-index:2';
+  box.innerHTML='<div class="big">'+P.e+'</div><h1>'+(hp<=0?'GAME OVER!':'NICE!')+'</h1><p style="font-size:26px">score: <b>'+sc+'</b></p><p>want the full game?</p><h1 style="font-size:26px">'+P.g+'</h1><p>play it FREE on 🎮 GAME CRATE</p><button id="adbtn">PLAY FULL GAME</button><p style="font-size:15px;margin-top:12px">maxaboiinyc5-wq.github.io</p>';
+  ad.appendChild(box);document.getElementById('adbtn').onclick=e=>{e.target.textContent='🎮 go to maxaboiinyc5-wq.github.io'};
+  sk.disabled=false;sk.textContent='✕ close';sk.onclick=()=>{ad.style.display='none';ad.innerHTML='';after()}}
+ const sti=setInterval(()=>{if(done)return;if(t>=10){sk.disabled=false;sk.textContent='✕ skip';sk.onclick=fin}else sk.textContent='skip in '+Math.ceil(10-t)},250);
+ function fr(now){if(done)return;const dt=Math.min(.05,(now-lt)/1000);lt=now;t+=dt;if(t>=LEN||hp<=0)return fin();
+  spT-=dt;if(spT<=0){spawnO();spT=Math.max(.3,(P.mode=='tap'?.8:.9)-t*.015)}
+  ob.forEach(o=>{if(o.vx)o.x+=o.vx*dt;if(o.vy)o.y+=o.vy*dt;if(o.l!=null)o.l-=dt});
+  if(P.mode=='tap')ob=ob.filter(o=>o.l>0);
+  if(P.mode=='defend')ob=ob.filter(o=>{if(o.x<40){hp--;snd(120,.3,'sawtooth',.2);return false}return true});
+  if(P.mode=='dodge'||P.mode=='catch'){const py=PH-110;ob=ob.filter(o=>{if(Math.abs(o.x-pl.x)<38&&Math.abs(o.y-py)<34){if(P.mode=='dodge'||o.bad){hp--;snd(120,.3,'sawtooth',.2)}else{sc+=10;fx.push({x:o.x,y:py-40,l:.5,t:'+10'});snd(800,.08,'triangle',.15)}return false}
+   if(o.y>PH+30){if(P.mode=='dodge')sc+=5;return false}return true})}
+  fx.forEach(f=>{f.l-=dt;f.y-=50*dt});fx=fx.filter(f=>f.l>0);
+  cx.clearRect(0,0,PW,PH);
+  if(P.mode=='defend'){cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(0,0,40,PH);cx.fillStyle='#fff';cx.font='30px sans-serif';cx.textAlign='center';for(let y=150;y<PH-100;y+=60)cx.fillText('🌻',20,y)}
+  if(P.mode=='dodge'){cx.strokeStyle='rgba(255,255,255,.3)';cx.setLineDash([30,30]);cx.lineDashOffset=-t*300;cx.lineWidth=6;[PW/3,PW*2/3].forEach(lx=>{cx.beginPath();cx.moveTo(lx,0);cx.lineTo(lx,PH);cx.stroke()});cx.setLineDash([])}
+  cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.font='48px sans-serif';
+  ob.forEach(o=>{cx.globalAlpha=o.l!=null?Math.min(1,o.l*3):1;cx.fillText(o.k,o.x,o.y)});cx.globalAlpha=1;
+  if(P.mode=='dodge'||P.mode=='catch'){cx.font='60px sans-serif';cx.fillText(P.mode=='catch'?P.e:P.e,pl.x,PH-110)}
+  cx.font='bold 24px sans-serif';cx.fillStyle='#fff';fx.forEach(f=>{cx.globalAlpha=f.l*2;cx.fillText(f.t,f.x,f.y)});cx.globalAlpha=1;
+  hud.textContent='⭐ '+sc+'   ⏱ '+Math.ceil(LEN-t)+'   '+'❤️'.repeat(Math.max(0,hp));
+  requestAnimationFrame(fr)}
+ requestAnimationFrame(fr)}
+function showAd(after){if(Math.random()<.3)return showPlayable(after);const ad=document.getElementById('ad'),a=rAd();const LEN=12+Math.floor(Math.random()*7);const skippable=Math.random()<.5;const skipAt=5;let t=0;
+ const was=(Math.floor(Math.random()*90)+10)*10-.01,now=(Math.random()*9+.99).toFixed(2);
+ const gc=!!a[5];const feats=[...(gc?GCF:AFEAT)].sort(()=>Math.random()-.5).slice(0,3),rev=rpick(gc?GCR:AREV);
+ const fl=Array.from({length:10},(_,i)=>'<span class="fl" style="left:'+Math.random()*100+'%;animation-delay:'+(Math.random()*4)+'s;animation-duration:'+(3+Math.random()*3)+'s">'+a[0]+'</span>').join('');
+ const slides=[
+  '<div class="big">'+a[0]+'</div><h1>'+a[1]+'</h1><p>'+a[2]+'</p>',
+  '<h1>WHY '+a[1]+'?</h1>'+feats.map(f=>'<div class="feat">✅ '+f+'</div>').join('')+'<div class="stars">⭐⭐⭐⭐⭐</div><p><i>'+rev+'</i></p>',
+  gc?'<div class="big" style="font-size:80px">🎮</div><h1>GAME CRATE</h1><p class="was">was $59.99</p><p class="now">NOW FREE</p><p class="hurry" style="color:#fff;text-shadow:0 2px 6px #000">🔥 ALL GAMES INCLUDED</p><button id="adbtn">PLAY FREE</button><p style="font-size:15px;margin-top:12px">maxaboiinyc5-wq.github.io</p>'
+  :'<div class="big" style="font-size:80px">'+a[0]+'</div><p class="was">was $'+was.toFixed(2)+'</p><p class="now">NOW $'+now+'</p><p class="hurry">⚠️ ONLY <span id="stock">'+(Math.floor(Math.random()*9)+2)+'</span> LEFT!</p><button id="adbtn">'+a[4]+'</button><p class="fine">*not a real product. no money. its a fake ad. calm down.</p>'
+ ];
+ ad.style.background='radial-gradient(circle,'+a[3]+',#000)';ad.style.display='flex';
+ ad.innerHTML=fl+'<div id="adp"><div id="adpf"></div></div><span id="adl">AD · '+a[1]+'</span><button id="skip" disabled></button><div id="ads"></div>';
+ const sk=document.getElementById('skip'),ads=document.getElementById('ads'),pf=document.getElementById('adpf');let sl=-1;
+ function close(){clearInterval(iv);ad.style.display='none';ad.innerHTML='';after()}
+ function upd(){const s2=Math.min(2,Math.floor(t/(LEN/3)));if(s2!=sl){sl=s2;ads.innerHTML='<div class="slide">'+slides[sl]+'</div>';const b=document.getElementById('adbtn');if(b)b.onclick=e=>{e.target.textContent=gc?'🎮 go to maxaboiinyc5-wq.github.io':'😂 its fake bro'}}
+  pf.style.width=(t/LEN*100)+'%';const left=Math.ceil(LEN-t);
+  if(skippable&&t>=skipAt){sk.disabled=false;sk.textContent='✕ skip';sk.onclick=close}
+  else if(skippable){sk.textContent='skip in '+Math.ceil(skipAt-t)}
+  else sk.textContent='ad ends in '+left;
+  const st=document.getElementById('stock');if(st&&Math.random()<.3&&+st.textContent>1)st.textContent=+st.textContent-1;
+  if(t>=LEN){sk.disabled=false;sk.textContent='✕ close';sk.onclick=close}}
+ upd();const iv=setInterval(()=>{t+=.5;upd()},500)}
+function getBest(k){try{return +localStorage['tb_'+k]||0}catch(e){return 0}}
+function home(){running=false;paused=false;pb.style.display='none';ui.style.display='flex';ui.className='menu';
+ ui.innerHTML='<div class="ban" style="position:sticky;top:6px;margin:6px 0 0;z-index:2" onclick="fakeTap(this)"></div><div class="bunt"></div><div class="bulbs">'+'<i></i>'.repeat(12)+'</div><div class="gun">🔫</div><div class="ttl">TARGET<br>BLAST</div><div class="chips"><span>🎯 tap to shoot</span><span>🔄 tap gun to reload</span><span>💣 avoid bombs</span><span>⭐ rapid fire</span><span>⏰ +3s</span><span>💗 +1 life</span></div><div class="grid">'+Object.keys(MODES).map(k=>{const m=MODES[k];return '<button class="mc" style="--c:'+m.c+'" onclick="start(\''+k+'\')"><b>'+m.n+'</b><small>'+m.d+'</small><em>🏆 '+getBest(k)+'</em></button>'}).join('')+'</div><div class="ban" onclick="fakeTap(this)"></div>';OFF=0;OFFB=0;rs();document.getElementById('gban').style.display='none';document.getElementById('gban2').style.display='none';startBanners()}
+home();
+function start(m,noPre){if(!noPre&&Math.random()<.6){ui.style.display='none';pb.style.display='none';running=false;clearInterval(banT);return showAd(()=>start(m,1))}mk=m||mk;MD=MODES[mk];MAXA=MD.ammo;lives=MD.endless?3:0;el=0;best=getBest(mk);try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
+ T=[];P=[];F=[];HOLES=[];shots=0;hits=0;rapid=0;hm=0;score=0;ammo=MAXA;time=MD.time;combo=0;reloading=0;spawnT=0;OFF=46;OFFB=46;rs();document.getElementById('gban').style.display='flex';document.getElementById('gban2').style.display='flex';startBanners();adClock=0;continued=false;running=true;paused=false;pb.style.display='block';ui.style.display='none';aim={x:W/2,y:H/2};last=performance.now();requestAnimationFrame(loop)}
+function spawn(){const r=Math.random();const bw=MD.bomb,gw=MD.gold,rest=1-bw-gw-.04;let k=r<bw?'bomb':r<bw+gw?'gold':r<bw+gw+.04?'clock':(()=>{const q=Math.random();return q<.6?'target':q<.8?'can':'duck'})();if(MD.endless&&k=='clock')k='heart';
+ if(Math.random()<.22&&k!='duck'){const lanes=[H*.22,H*.4,H*.58];T.push({k,x:40+Math.random()*(W-80),y:lanes[Math.floor(Math.random()*3)],vx:0,r:k=='can'?22:k=='target'?30:26,bob:0,pop:1,up:0,life:1.3});return}
+ const lanes=[H*.22,H*.4,H*.58];const y=lanes[Math.floor(Math.random()*3)];const dir=Math.random()<.5?1:-1;
+ const sp=(110+Math.random()*120+Math.min(el,60)*5)*(k=='duck'?1.7:1)*MD.spd;
+ T.push({k,x:dir>0?-40:W+40,y,vx:sp*dir*(k=='gold'?1.5:1),r:k=='target'?30:k=='can'?22:k=='gold'?22:26,pop:0,up:1,bob:Math.random()*6})}
+function boom(px,py,col,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=60+Math.random()*240;P.push({x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,l:.6+Math.random()*.4,c:col})}}
+function txt(px,py,t,col){F.push({x:px,y:py,t,c:col,l:1})}
+function gunBox(){return {x:W/2-60,y:H-150,w:120,h:150}}
+c.addEventListener('pointerdown',e=>{if(!running||paused)return;const px=e.clientX,py=e.clientY-OFF;aim={x:px,y:py};
+ const gb=gunBox();if(px>gb.x&&px<gb.x+gb.w&&py>gb.y){reload();return}
+ if(reloading>0&&!rapid&&!MD.inf)return;if(ammo<=0&&!rapid&&!MD.inf){snd(200,.08,'square',.1);txt(px,py,'RELOAD!','#f39c12');return}
+ if(!rapid&&!MD.inf)ammo--;shots++;flash=.08;shake=6;bang();try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}
+ let hit=null;for(let i=T.length-1;i>=0;i--){const t=T[i];if(t.up>.6&&Math.hypot(t.x-px,t.y+(1-t.up)*50-py)<t.r*MD.hit){hit=t;T.splice(i,1);break}}
+ if(!hit){combo=0;HOLES.push({x:px,y:py,l:4});boom(px,py,'#aaa',5);if(MD.miss){score=Math.max(0,score-MD.miss);txt(px,py,'-'+MD.miss,'#aaa')}return}
+ if(hit.k=='bomb'){if(MD.endless){lives--;txt(W/2,H/2-40,'💔 -1 LIFE','#e74c3c')}else{score=Math.max(0,score-MD.bp);time=Math.max(0,time-MD.bt)}combo=0;shake=20;boom(hit.x,hit.y,'#e74c3c',40);boom(hit.x,hit.y,'#f1c40f',30);snd(90,.5,'sawtooth',.3);if(!MD.endless)txt(hit.x,hit.y,'-'+MD.bp+'  -'+MD.bt+'s 💥','#e74c3c');if(MD.endless&&lives<=0)return end();return}
+ hits++;hm=.25;hmx=px;hmy=py;combo++;if(hit.k=='gold'){rapid=4;ammo=MAXA;reloading=0;txt(W/2,H/2,'🔥 RAPID FIRE!','#f1c40f');snd(1200,.4,'triangle',.25)}if(hit.k=='heart'){lives=Math.min(5,lives+1);txt(hit.x,hit.y-24,'+❤️','#e84393')}if(hit.k=='clock'){time+=3;txt(hit.x,hit.y-24,'+3s','#2ecc71')}const base=hit.k=='gold'?50:hit.k=='clock'||hit.k=='heart'?5:hit.k=='target'?(Math.hypot(hit.x-px,hit.y-py)<7?15:10):hit.k=='can'?20:30;const mult=Math.min(5,1+Math.floor(combo/4));const pts=base*mult*MD.mult;score+=pts;
+ if(hit.k=='duck'){time+=1;txt(hit.x,hit.y-24,'+1s','#3498db')}
+ boom(hit.x,hit.y,hit.k=='target'?'#e74c3c':hit.k=='can'?'#bdc3c7':'#f1c40f',18);snd(hit.k=='can'?900:700,.12,'triangle',.2);txt(hit.x,hit.y,'+'+pts+(mult>1?' x'+mult:''),'#fff')});
+function reload(){if(MD.inf||reloading>0||ammo==MAXA)return;reloading=MD.reload;snd(300,.1,'square',.12);setTimeout(()=>snd(500,.1,'square',.12),300)}
+function loop(now){if(!running||paused)return;const dt=Math.min(.05,(now-last)/1000);last=now;
+ el+=dt;adClock+=dt;if(adClock>=12){adClock=0;paused=true;pb.style.display='none';showAd(()=>{if(running&&paused)resume()});return}if(!MD.endless){time-=dt;if(time<=0)return end()}
+ spawnT-=dt;if(spawnT<=0){spawn();spawnT=Math.max(.28,.8-Math.min(el,60)*.014)*MD.spawn}
+ if(reloading>0){reloading-=dt;if(reloading<=0){ammo=MAXA}}
+ if(rapid>0)rapid-=dt;if(hm>0)hm-=dt;HOLES.forEach(h=>h.l-=dt);HOLES=HOLES.filter(h=>h.l>0);T.forEach(t=>{t.x+=t.vx*dt;t.bob+=dt*4;if(t.pop){t.life-=dt;t.up=t.life>1.1?Math.min(1,(1.3-t.life)*5):t.life<.2?Math.max(0,t.life*5):1}});T=T.filter(t=>t.x>-80&&t.x<W+80&&(!t.pop||t.life>0));
+ P.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.l-=dt});P=P.filter(p=>p.l>0);
+ F.forEach(f=>{f.y-=40*dt;f.l-=dt});F=F.filter(f=>f.l>0);
+ flash-=dt;shake*=.85;draw();requestAnimationFrame(loop)}
+function draw(){x.save();x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+ // sky + carnival
+ let gr=x.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#2b1055');gr.addColorStop(1,'#1a0b33');x.fillStyle=gr;x.fillRect(-20,-20,W+40,H+40);
+ x.fillStyle='rgba(255,255,255,.04)';for(let i=0;i<W;i+=24)x.fillRect(i,0,12,H);
+ const tt=performance.now()/300;for(let i=10;i<W;i+=28){x.fillStyle=(Math.floor(tt)+i/28)%2<1?'#f1c40f':'#e67e22';x.beginPath();x.arc(i,52,5,0,6.28);x.fill()}
+ x.fillStyle='#8e1b1b';x.beginPath();x.moveTo(0,40);x.quadraticCurveTo(30,H*.4,0,H*.75);x.fill();x.beginPath();x.moveTo(W,40);x.quadraticCurveTo(W-30,H*.4,W,H*.75);x.fill();
+ for(let i=0;i<W;i+=40){x.fillStyle=(i/40)%2?'#c0392b':'#ecf0f1';x.beginPath();x.moveTo(i,0);x.lineTo(i+40,0);x.lineTo(i+20,40);x.fill()}
+ [H*.22,H*.4,H*.58].forEach(y=>{x.fillStyle='#8e5a2b';x.fillRect(0,y+34,W,12);x.fillStyle='#6b4220';x.fillRect(0,y+46,W,5)});
+ HOLES.forEach(h=>{x.globalAlpha=Math.min(1,h.l);x.fillStyle='#000';x.beginPath();x.arc(h.x,h.y,4,0,6.28);x.fill();x.strokeStyle='#555';x.lineWidth=1;x.stroke()});x.globalAlpha=1;
+ T.forEach(t=>{const y=t.y+Math.sin(t.bob)*3+(1-t.up)*50;x.save();x.beginPath();x.rect(t.x-60,t.y-80,120,t.pop?80+t.r*0+40:200);x.clip();x.translate(t.x,y);
+  x.fillStyle='#555';x.fillRect(-3,t.r-4,6,40-t.r+4);
+  if(t.k=='target'){[[30,'#e74c3c'],[22,'#fff'],[14,'#e74c3c'],[6,'#fff']].forEach(([r,cl])=>{x.fillStyle=cl;x.beginPath();x.arc(0,0,r,0,6.28);x.fill()})}
+  else if(t.k=='can'){x.fillStyle='#bdc3c7';x.fillRect(-15,-22,30,44);x.fillStyle='#27ae60';x.fillRect(-15,-10,30,18);x.fillStyle='#fff';x.font='bold 11px sans-serif';x.textAlign='center';x.fillText('SODA',0,4)}
+  else if(t.k=='duck'){x.scale(t.vx>0?1:-1,1);x.fillStyle='#f1c40f';x.beginPath();x.ellipse(0,4,24,16,0,0,6.28);x.fill();x.beginPath();x.arc(14,-12,12,0,6.28);x.fill();x.fillStyle='#e67e22';x.beginPath();x.moveTo(24,-12);x.lineTo(34,-8);x.lineTo(24,-6);x.fill();x.fillStyle='#000';x.beginPath();x.arc(17,-15,2.5,0,6.28);x.fill()}
+  else if(t.k=='gold'){x.fillStyle='#f1c40f';x.shadowColor='#f1c40f';x.shadowBlur=20;x.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rr=i%2?10:24;x.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}x.fill();x.shadowBlur=0}
+  else if(t.k=='heart'){x.fillStyle='#e84393';x.shadowColor='#ff6fae';x.shadowBlur=14;x.beginPath();x.moveTo(0,20);x.bezierCurveTo(-30,-2,-18,-28,0,-12);x.bezierCurveTo(18,-28,30,-2,0,20);x.fill();x.shadowBlur=0}
+  else if(t.k=='clock'){x.fillStyle='#ecf0f1';x.beginPath();x.arc(0,0,24,0,6.28);x.fill();x.strokeStyle='#2ecc71';x.lineWidth=4;x.stroke();x.strokeStyle='#222';x.lineWidth=3;x.beginPath();x.moveTo(0,0);x.lineTo(0,-15);x.moveTo(0,0);x.lineTo(10,4);x.stroke()}
+  else{x.fillStyle='#222';x.beginPath();x.arc(0,0,22,0,6.28);x.fill();x.strokeStyle='#8b6b3d';x.lineWidth=4;x.beginPath();x.moveTo(10,-18);x.quadraticCurveTo(18,-30,26,-26);x.stroke();x.fillStyle=Math.random()<.5?'#f1c40f':'#e74c3c';x.beginPath();x.arc(26,-26,4,0,6.28);x.fill();x.fillStyle='#fff';x.font='bold 16px sans-serif';x.textAlign='center';x.fillText('💀',0,6)}
+  x.restore();x.restore()});
+ P.forEach(p=>{x.globalAlpha=Math.max(0,p.l);x.fillStyle=p.c;x.fillRect(p.x-3,p.y-3,6,6)});x.globalAlpha=1;
+ F.forEach(f=>{x.globalAlpha=Math.max(0,f.l);x.fillStyle=f.c;x.font='bold 24px sans-serif';x.textAlign='center';x.fillText(f.t,f.x,f.y)});x.globalAlpha=1;
+ // counter
+ x.fillStyle='#6b4220';x.fillRect(0,H-90,W,90);x.fillStyle='#8e5a2b';x.fillRect(0,H-90,W,12);
+ // gun
+ const gx=W/2,gy=H-40,ang=Math.atan2(aim.y-gy,aim.x-gx);x.save();x.translate(gx,gy);x.rotate(ang+(reloading>0?.6:0));
+ x.fillStyle='#2c3e50';x.fillRect(0,-12,90,24);x.fillStyle='#e67e22';x.fillRect(80,-9,14,18);x.fillStyle='#34495e';x.fillRect(-10,-16,40,32);
+ if(flash>0){x.fillStyle='#f1c40f';x.beginPath();x.moveTo(94,0);x.lineTo(130,-16);x.lineTo(120,0);x.lineTo(130,16);x.fill()}x.restore();
+ x.fillStyle='#34495e';x.beginPath();x.arc(gx,gy,26,0,6.28);x.fill();
+ x.restore();
+ // crosshair
+ x.strokeStyle='#fff';x.lineWidth=2;x.beginPath();x.arc(aim.x,aim.y,16,0,6.28);x.moveTo(aim.x-24,aim.y);x.lineTo(aim.x-8,aim.y);x.moveTo(aim.x+8,aim.y);x.lineTo(aim.x+24,aim.y);x.moveTo(aim.x,aim.y-24);x.lineTo(aim.x,aim.y-8);x.moveTo(aim.x,aim.y+8);x.lineTo(aim.x,aim.y+24);x.stroke();
+ if(hm>0){x.strokeStyle='rgba(255,255,255,'+hm*4+')';x.lineWidth=3;x.beginPath();x.moveTo(hmx-14,hmy-14);x.lineTo(hmx-6,hmy-6);x.moveTo(hmx+14,hmy-14);x.lineTo(hmx+6,hmy-6);x.moveTo(hmx-14,hmy+14);x.lineTo(hmx-6,hmy+6);x.moveTo(hmx+14,hmy+14);x.lineTo(hmx+6,hmy+6);x.stroke()}
+ // hud
+ x.fillStyle='#fff';x.font='bold 22px sans-serif';x.textAlign='left';x.fillText('⭐ '+score,12,70);x.textAlign='right';if(MD.endless){x.fillText('❤️'.repeat(Math.max(0,lives)),W-12,70)}else{x.fillStyle=time<10?'#e74c3c':'#fff';x.fillText('⏱ '+Math.ceil(time),W-12,70)}
+ if(combo>=4){x.textAlign='center';x.fillStyle='#f1c40f';x.fillText('🔥 COMBO x'+Math.min(5,1+Math.floor(combo/4)),W/2,125)}
+ if(MD.inf){x.fillStyle='#f1c40f';x.font='bold 30px sans-serif';x.textAlign='left';x.fillText('∞',14,H-42)}else for(let i=0;i<MAXA;i++){x.fillStyle=i<ammo?'#f1c40f':'#555';x.fillRect(14+i*16,H-70,10,26)}
+ if(rapid>0){x.fillStyle='#f1c40f';x.textAlign='left';x.font='bold 18px sans-serif';x.fillText('🔥 RAPID FIRE '+rapid.toFixed(1)+'s',14,H-20)}
+ else if(reloading>0){x.fillStyle='#fff';x.textAlign='left';x.font='bold 18px sans-serif';x.fillText('RELOADING...',14,H-20)}
+ else if(ammo==0){x.fillStyle='#e74c3c';x.textAlign='left';x.font='bold 18px sans-serif';x.fillText('TAP GUN TO RELOAD',14,H-20)}}
+function pause(){if(!running||paused)return;paused=true;ui.className='';pb.style.display='none';ui.style.display='flex';
+ ui.innerHTML='<h1>⏸ PAUSED</h1><p>'+MD.n+' · ⭐ '+score+'</p><button onclick="resume()">▶ RESUME</button><button style="background:#e67e22;font-size:24px;padding:14px 40px;margin:6px" onclick="start()">🔄 START OVER</button><button style="background:#555;font-size:24px;padding:14px 40px;margin:6px" onclick="home()">🏠 MENU</button><div class="ban" style="position:relative;bottom:auto" onclick="fakeTap(this)">'+banHTML()+'</div>'}
+function resume(){paused=false;pb.style.display='block';ui.style.display='none';last=performance.now();requestAnimationFrame(loop)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+let continued=false;
+function end(){running=false;paused=false;pb.style.display='none';
+ if(continued)return realEnd();
+ ui.className='';ui.style.display='flex';
+ ui.innerHTML='<h1>'+(MD.endless?'💔 OUT OF LIVES!':'⏰ TIME\'S UP!')+'</h1><p style="font-size:40px;font-weight:900;color:#f1c40f;margin:6px">⭐ '+score+'</p><p>keep going?</p><button onclick="watch15()" style="background:#27ae60;font-size:24px;padding:18px 26px">📺 WATCH 15 ADS<br>AND CONTINUE</button><button onclick="realEnd()" style="background:none;font-size:16px;padding:8px;opacity:.7;text-decoration:underline">no thanks</button>'}
+function watch15(){continued=true;ui.style.display='none';const cn=document.getElementById('adcnt');let n=0;
+ const next=()=>{n++;if(n>15){cn.style.display='none';return cont()}cn.style.display='block';cn.textContent='📺 AD '+n+' / 15';showAd(next)};next()}
+function cont(){if(MD.endless)lives=1;else time=10;T=[];running=true;paused=false;ui.style.display='none';pb.style.display='block';
+ document.getElementById('gban').style.display='flex';document.getElementById('gban2').style.display='flex';adClock=0;
+ txt(W/2,H/2,MD.endless?'❤️ CONTINUE!':'+10s CONTINUE!','#2ecc71');last=performance.now();requestAnimationFrame(loop)}
+function realEnd(){running=false;ui.className='';pb.style.display='none';document.getElementById('gban').style.display='none';document.getElementById('gban2').style.display='none';showAd(()=>{if(Math.random()<.5)showAd(()=>{})});const nb=score>best;if(nb){best=score;try{localStorage['tb_'+mk]=best}catch(e){}}
+ ui.style.display='flex';const acc=shots?Math.round(hits/shots*100):0;const rs=MD.endless?2:1;const rank=score>=600*rs?'🥇 GOLD':score>=350*rs?'🥈 SILVER':score>=150*rs?'🥉 BRONZE':'🪵 ROOKIE';
+ ui.innerHTML='<h1>'+(MD.endless?'GAME OVER!':'TIME\'S UP!')+'</h1><p>'+MD.n+'</p><p style="font-size:48px;font-weight:900;color:#f1c40f;margin:10px">'+score+'</p><p style="font-size:26px;font-weight:800">'+rank+'</p><p>🎯 accuracy: '+acc+'% ('+hits+'/'+shots+')</p><p>'+(nb?'🏆 NEW BEST!':'best: '+best)+'</p><button onclick="start()">PLAY AGAIN</button><button style="background:#555;font-size:22px;padding:12px 40px;margin:0" onclick="home()">🏠 MAIN MENU</button><div class="ban" style="position:relative;bottom:auto" onclick="fakeTap(this)">'+banHTML()+'</div>'}
+</script></body></html>

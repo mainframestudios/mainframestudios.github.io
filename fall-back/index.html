@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Fall Back!</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0d1a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;touch-action:none}
+canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;top:0;left:0;right:0;padding:10px 12px;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;width:100%}
+.pill{background:rgba(10,12,30,.78);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:6px 12px;font-weight:700}
+#bigclock{font-size:28px;font-variant-numeric:tabular-nums;text-align:center}
+#night{font-size:14px}
+#obj{font-size:15px;background:rgba(255,209,102,.92);color:#1a1033;border:none}
+#noiseWrap{width:110px;font-size:12px;text-align:center}
+#noiseBar{height:10px;border-radius:6px;background:#222;overflow:hidden;margin-top:4px}
+#noiseFill{height:100%;width:0;background:linear-gradient(90deg,#06d6a0,#ffd166,#ef476f)}
+#banner{position:fixed;top:40%;left:0;right:0;text-align:center;font-size:42px;font-weight:900;pointer-events:none;opacity:0;transition:opacity .3s;text-shadow:0 4px 0 #000,0 0 30px #ff006e}
+#toast{position:fixed;bottom:40px;left:0;right:0;text-align:center;pointer-events:none;padding:0 16px}
+#toast span{background:rgba(0,0,0,.8);padding:8px 14px;border-radius:12px;font-weight:700;font-size:15px;opacity:0;transition:opacity .3s;display:inline-block}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 30%,#2a1b5e,#0b0d1a 70%)}
+.screen h1{font-size:54px;font-weight:900;line-height:1;margin-bottom:6px;background:linear-gradient(#ffd166,#ff6b35);-webkit-background-clip:text;background-clip:text;color:transparent}
+.screen h2{font-size:32px;font-weight:900;margin-bottom:10px}
+.screen p{max-width:380px;opacity:.92;line-height:1.45;margin:6px 0;font-size:16px}
+.small{font-size:13px!important;opacity:.6!important}
+button{font:inherit;font-weight:800;font-size:20px;padding:14px 34px;border-radius:16px;border:none;background:#ffd166;color:#1a1033;margin-top:18px;cursor:pointer;box-shadow:0 5px 0 #b8860b}
+button:active{transform:translateY(3px);box-shadow:0 2px 0 #b8860b}
+.hidden{display:none!important}
+.big{font-size:70px;margin:4px}
+#mini{background:rgba(5,6,20,.9);overflow-y:auto}
+#tv{width:250px;height:180px;border-radius:22px;background:#111;border:12px solid #3a3a4a;display:flex;align-items:center;justify-content:center;font-size:90px;box-shadow:0 0 40px rgba(120,180,255,.4);position:relative}
+#tvLabel{position:absolute;bottom:6px;left:0;right:0;font-size:14px;font-weight:800;color:#9cf}
+#barBox{width:280px;height:34px;border-radius:12px;background:#222;position:relative;overflow:hidden;margin:14px 0;border:2px solid #444}
+#green{position:absolute;top:0;bottom:0;background:#06d6a0}
+#needle{position:absolute;top:-2px;bottom:-2px;width:6px;background:#fff;border-radius:3px;box-shadow:0 0 8px #fff}
+#stack{font-size:46px;min-height:60px;letter-spacing:-6px}
+#sx{position:fixed;inset:0;background:#0d0d0f;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:auto;overscroll-behavior:contain;padding:14px 0 200px;text-align:left}
+#sx .logo{font-weight:900;font-size:28px;color:#e50914;letter-spacing:1px;padding:0 14px}
+#sx .found{position:sticky;top:0;z-index:2;background:#0d0d0f;padding:8px 14px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+#sx h3{font-size:16px;margin:14px 14px 6px}
+#sx .rowx{display:flex;gap:8px;overflow-x:auto;padding:0 14px 6px;touch-action:auto;-webkit-overflow-scrolling:touch}
+#sx .tile{flex:0 0 96px;height:136px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;cursor:pointer;position:relative}
+#sx .tile b{font-size:40px}
+#sx .tile span{font-size:11px;font-weight:700;margin-top:6px;line-height:1.15}
+#sx .tile.seen{opacity:.35}
+#sheet{position:fixed;left:0;right:0;bottom:0;padding-bottom:calc(30px + env(safe-area-inset-bottom))!important;background:#1c1c22;border-radius:20px 20px 0 0;padding:20px;text-align:center;box-shadow:0 -10px 40px #000;z-index:5}
+#sheet button{margin-top:10px;font-size:17px;padding:12px 26px}
+#sheet .g{display:inline-block;background:#333;border-radius:8px;padding:3px 10px;font-size:13px;margin:6px 0}
+.pc{background:#e8eef5;color:#111;border-radius:14px;padding:18px;max-width:330px;border:10px solid #333}
+.pc .logo{font-weight:900;font-size:34px;color:#e50914}
+#quest{font-size:12px;max-width:94%;text-align:center;background:rgba(155,93,229,.85)}
+.card{background:rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;max-width:360px;text-align:left;line-height:1.6;font-size:15px;margin-top:8px}
+.micro{width:200px;height:110px;background:#333;border-radius:14px;border:6px solid #555;display:flex;align-items:center;justify-content:flex-end;padding-right:14px;margin-top:10px}
+#mDisp{background:#041;color:#3f6;font:700 30px ui-monospace,monospace;padding:6px 10px;border-radius:6px}
+.bowl{width:90px;height:200px;border:4px solid #fff;border-top:none;border-radius:0 0 40px 40px;position:relative;overflow:hidden;margin:14px auto 4px;background:#222}
+#band{position:absolute;left:0;right:0;background:rgba(6,214,160,.4);border-top:2px dashed #06d6a0;border-bottom:2px dashed #06d6a0}
+#fill{position:absolute;left:0;right:0;bottom:0;height:0}
+#shop{justify-content:flex-start;overflow-y:auto;touch-action:auto;padding-top:30px}
+.shopList{width:100%;max-width:400px}
+.item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border-radius:14px;padding:10px;margin:8px 0;text-align:left}
+.item .ic{font-size:38px}.item div{flex:1;font-size:15px}.item small{opacity:.7}
+.item button{font-size:14px;padding:8px 12px;margin:0;white-space:nowrap}
+#title,#endScreen{overflow-y:auto;touch-action:auto;justify-content:safe center;padding:16px 20px 30px}
+#title .big{font-size:46px;margin:0}#title h1{font-size:44px}#title p{font-size:14px;margin:4px 0;line-height:1.35}
+#title button{margin-top:10px;padding:11px 28px;font-size:18px}
+.newtag{background:#ff006e;color:#fff;font-size:11px;font-weight:900;padding:1px 6px;border-radius:6px;vertical-align:middle}
+#thunder{position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0}
+.toaster{position:relative;width:160px;height:150px;margin:8px auto}
+#wf{position:absolute;left:50%;top:40px;margin-left:-28px;font-size:56px;transition:transform .25s}
+.tbody{position:absolute;left:0;right:0;bottom:0;height:90px;background:#bbb;border-radius:20px 20px 10px 10px;border:4px solid #888;display:flex;align-items:center;justify-content:center;font-size:30px;z-index:2}
+#sleepClock{font-size:64px;font-weight:900;font-variant-numeric:tabular-nums}
+.stars{font-size:46px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" class="hidden">
+  <div class="row">
+    <div id="night" class="pill">Night 1</div>
+    <div class="pill"><div id="bigclock">9:00 PM</div></div>
+    <div id="noiseWrap" class="pill">😴 Parents <span id="nearX"></span><div id="noiseBar"><div id="noiseFill"></div></div></div>
+  </div>
+  <div id="obj" class="pill">📺 Go watch TV</div>
+  <div id="quest" class="pill hidden"></div>
+</div>
+<div id="banner"></div><div id="thunder"></div>
+<div id="toast"><span id="toastTxt"></span></div>
+
+<div id="title" class="screen">
+  <div class="big">🕑</div>
+  <h1>FALL BACK!</h1>
+  <p>The clocks change tonight. Watch TV, go to bed, wake up when the clocks flip, sneak a <b>midnight snack</b>, and get back to bed.</p>
+  <p><b>Don't wake your parents.</b> If Mom hears you, she comes out, so <b>HIDE</b> 🫥.</p>
+  <p>Every night is different: new snacks, random events, side quests, your brother, and Spring Forward nights.</p>
+  <p class="small">Move: drag (small drag = tiptoe) · Keyboard: WASD to tiptoe, Shift to run</p>
+  <button id="cont" class="hidden" style="background:#06d6a0;box-shadow:0 5px 0 #048a68"></button>
+  <button id="play">PLAY</button>
+  <button id="titleShop" style="background:#9b5de5;color:#fff;box-shadow:0 5px 0 #5a2d91;font-size:16px;padding:10px 24px">🛍️ PAJAMA SHOP</button>
+  <p class="small" id="best"></p>
+</div>
+
+<div id="mini" class="screen hidden"></div>
+<div id="sx" class="hidden"></div>
+
+<div id="endScreen" class="screen hidden">
+  <div class="big" id="endEmoji">😴</div>
+  <h2 id="endTitle"></h2>
+  <div class="stars" id="endStars"></div>
+  <p id="endText"></p>
+  <button id="endBtn">NEXT</button>
+  <button id="endShop" style="background:#9b5de5;color:#fff;box-shadow:0 5px 0 #5a2d91;font-size:16px;padding:10px 24px">🛍️ SHOP</button>
+</div>
+<div id="shop" class="screen hidden"></div>
+
+<script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W,H,DPR,T;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);T=Math.max(40,Math.min(72,Math.floor(Math.min(W,H)/7.5)));}
+addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id);
+
+// ---------- MAP ----------
+let MAP=[
+"################",
+"#yyyyy#hh#uuuuu#",
+"#yyyyy#hh#uuuuu#",
+"#yyyyy.hh.uuuuu#",
+"#yyyyy#hh#uuuuu#",
+"#######hh#######",
+"#sssss#hh#kkkkk#",
+"#sssss#hh#kkkkk#",
+"#sssss.hh.kkkkk#",
+"#sssss#hh.kkkkk#",
+"#######hh#kkkkk#",
+"#qqqqq#hh#kkkkk#",
+"#qqqqq.hh#######",
+"#qqqqq#hh#ttttt#",
+"#qqqqq#hh#ttttt#",
+"#######hh###.###",
+"#lllll#hh#ppppp#",
+"#lllll#hh#ppppp#",
+"#lllll.hh#ppppp#",
+"#lllll.hh.ppppp#",
+"#lllll.hh#ppppp#",
+"#lllll#hh#ppppp#",
+"#lllll#hh#ppppp#",
+"################"];
+let MW=MAP[0].length,MH=MAP.length;
+const FLOOR={g:'#2f5233',w:'#6e6e78',r:'#26262c',b:'#d8cfb0',c:'#6b5a7a',x:'#7a6a5a',o:'#9a8a6a',y:'#3b4a8a',s:'#4a7a3b',q:'#7a6a3b',k:'#c9b48a',h:'#8a5a3c',l:'#7a3b5e',p:'#3d6b5a',u:'#5fa8b8',t:'#5fa8b8','.':'#8a5a3c'};
+const ROOMNAME={g:'Front Yard',w:'',r:'',b:'Bodega 24/7',c:'4th Floor Hallway',x:'Stairs',o:'Lobby',y:'Your Room',s:"Brother's Room",q:"Sister's Room",k:'Kitchen',h:'Hallway',l:'Living Room',p:"Parents' Room",u:'Bathroom',t:'Bathroom'};
+const wall=(x,y)=>x<0||y<0||x>=MW||y>=MH||MAP[y][x]==='#';
+
+let DECOR=[
+ {x:3.5,y:3,w:2,h:1.6,c:'#e85d75',t:'🛏️'},{x:1.1,y:1.1,w:1.6,h:.8,c:'#5a4632',t:'💻'},
+ {x:3.5,y:8,w:2,h:1.6,c:'#4ea8de',t:'😪'},
+ {x:3.5,y:13,w:2,h:1.6,c:'#c9a227',t:'🛏️'},
+ {x:11,y:8.3,w:2.6,h:1.4,c:'#8b5e34',t:''},
+ {x:13.9,y:6.1,w:1,h:1.5,c:'#e8eef5',t:'🧊'},
+ {x:10.1,y:6.1,w:3.2,h:.8,c:'#6d5a45',t:''},
+ {x:13.4,y:2.8,w:1.5,h:2,c:'#fff',t:'🛁'},{x:10.2,y:1.1,w:1,h:1,c:'#eee',t:'🚽'},
+ {x:14,y:13.1,w:.9,h:.9,c:'#eee',t:'🚽'},
+ {x:1.3,y:19.6,w:3,h:1.3,c:'#5d4e8c',t:'🛋️'},{x:1.3,y:16.2,w:3,h:.6,c:'#222',t:''},
+ {x:11,y:19.6,w:3,h:2.2,c:'#e8d5b7',t:'😴'}
+];
+let ZONES={pc:{x:1.9,y:2.4,r:.8},tv:{x:2.8,y:18.6,r:1.1},bed:{x:4.5,y:3.8,r:1.1},fridge:{x:13,y:7.6,r:1.1}};
+
+// ---------- AUDIO ----------
+let AC=null;
+function beep(f,d=.1,type='square',v=.06,slide=0){
+  try{ if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;
+  if(slide)o.frequency.linearRampToValueAtTime(Math.max(30,f+slide),AC.currentTime+d);
+  g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);
+  o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}
+}
+
+// ---------- STATE ----------
+let night=1,phase='title',player,gameMin=1260,noise=0,maxNoise=0,creaks=[],dad=null,parts=[],shake=0,sneakT=0,sneakSecs=100;
+let hasStreamix=false;try{hasStreamix=localStorage.getItem('fallback_streamix')==='1'}catch(e){}
+let pcDismiss=false,pcPrev=null;
+const SPOOKY=['The Basement Knows',"Grandma's Attic",'Night of the Lawn Gnomes','Fog Over Pinecrest','The 13th Hallway',"Don't Open the Freezer",'Whispers in Room 8','The Scarecrow Shift','Hollow Tooth Manor','Midnight at Mudlake','The Last Trick-or-Treater','Candlewick Lane','It Came From the Vents','The Pumpkin Patch Below','Static on Channel Zero','The Hungry Closet','Bones in the Bayou','The Mirror Kept Smiling','Creeper Creek Camp','Lights Out on Elm Row','The Doll in Seat 14B','Under the Bunk Bed','The Night Bus to Nowhere','Something in the Cornfield','The Babysitter Never Left','Gravel Pit Ghosts','The Thing in the Pool Filter','Knock Knock, Who','Room Service at 3 AM','The Crawlspace Tapes','The Ice Cream Truck at Midnight','Werewolf Junior High','The Lighthouse Keeper\'s Cat','Skeleton Crew Summer','The Last Bus Stop','Nobody Lives in Apartment 9','Hayride of Doom','The Vampire Next Door','Count Crumbles','Fog Machine','The Wishing Well Wishes Back','Toothless Tim','The Laundry Monster','The Sleepover That Never Ended','Mummy Ate My Homework','Ghost Lake Lodge','The Blinking Porch Light','Swamp Thing Season 2','The Pizza Delivery Ghost','When the Clocks Stopped','The Old Elevator','Cobweb Hill','The Jack-O\'-Lantern Grin','Phantom of the Food Court','Bigfoot\'s Backyard','Zombie Science Fair','The Night Janitor','Banshee Bay','The Unfinished Basement','Do Not Feed the Pumpkins'];
+let spookyBag=[];
+function nextSpooky(){if(!spookyBag.length)spookyBag=SPOOKY.slice().sort(()=>Math.random()-.5);return spookyBag.pop()}
+
+let save={stars:0,owned:[],skin:'🧒',best:0};
+try{Object.assign(save,JSON.parse(localStorage.getItem('fallback_save')||'{}'))}catch(e){}
+function persist(){try{localStorage.setItem('fallback_save',JSON.stringify(save))}catch(e){}}
+const has=k=>save.owned.includes(k);
+function showBest(){const cn=save.reached||save.best;const cb=$('cont');if(cb){cb.classList.toggle('hidden',!(cn>1));cb.textContent='▶ CONTINUE (Night '+cn+')';$('play').textContent=cn>1?'NEW GAME':'PLAY'}$('best').innerHTML=(save.best?'Best: survived Night '+save.best+' · ':'')+'⭐ '+save.stars+' stars to spend'}showBest();
+
+let N={},dog=null,mom=null,momCD=0,tvOnNight=false,brother={awake:false,fed:false},quest=null,lastEvent=null,trail=[],trailT=0,miniRaf=null;
+let HIDES=[{x:3,y:21.9,n:'behind the couch'},{x:4.6,y:14.3,n:"under your sister's bed"},{x:12.2,y:4.3,n:'in the bathtub'},{x:10.6,y:10.5,n:'in the pantry'},{x:1.5,y:9.3,n:"in your brother's closet"}];
+const EVENTS={legos:{n:'🧱 LEGOs everywhere',d:'Someone left LEGOs on the floor. Step on one = OW (loud + you freeze).'},storm:{n:'⛈️ Thunderstorm',d:'Thunder covers your noise. Run during the thunder!'},power:{n:'⚡ Power outage',d:"It's pitch black and the microwave is dead."},dog:{n:'🐕 The dog is awake',d:'He follows you around and barks.'},tvon:{n:'📺 TV left on',d:'It keeps getting louder. Go turn it off.'}};
+const SNACKS={sandwich:'🥪 Sandwich',popcorn:'🍿 Microwave Popcorn',cereal:'🥣 Cereal',waffle:'🧇 Toaster Waffles',icecream:'🍨 Ice Cream',candy:'🍬 HALLOWEEN CANDY HUNT'};
+const SNACK_IC={sandwich:'🥪',popcorn:'🍿',cereal:'🥣',waffle:'🧇',icecream:'🍨',candy:'🍬'};
+const QUESTS={
+  cookie:{n:'Steal a cookie from the jar',pick:{x:10.6,y:7.5},icon:'🍪'},
+  phone:{n:'Grab your phone from the living room and put it on your charger',pick:{x:4.6,y:21.6},drop:{x:1.6,y:4.2},icon:'📱'},
+  controller:{n:"Get back the controller Mom took (it's in HER room)",pick:{x:14.3,y:17.2},drop:{x:1.6,y:4.2},icon:'🎮'}};
+ZONES.bro={x:2.4,y:8.4,r:1};
+const HOUSE={name:'house',map:MAP,decor:DECOR,zones:ZONES,hides:HIDES,
+  labels:[['y',2.2,4.7],['s',3,6.4],['q',3,11.4],['k',11.5,10.6],['u',12.5,4.6],['t',12,14.6],['l',3,22.5],['p',12.5,16.4]],
+  tvr:{x:1.45,y:16.25},tvText:17.2,pcen:{x:12.5,y:19.5},line:{a:{x:8,y:1.6},b:{x:8,y:22.3}},
+  tvStart:{x:8,y:10.5},sneakStart:{x:4.5,y:3.2},dogStart:{x:8,y:12},
+  q:{cookie:{x:10.6,y:7.5},phone:{x:4.6,y:21.6},drop:{x:1.6,y:4.2},ctrl:{x:14.3,y:17.2}},jar:{x:10.6,y:6.55},
+  bro:DECOR[2],pbed:DECOR.find(d=>d.t==='😴'),couch:DECOR.find(d=>d.t==='🛋️')};
+const APT={name:'apt',map:[
+"##############",
+"#yyyy#kkkk#uu#",
+"#yyyy#kkkk#uu#",
+"#yyyy#kkkk#uu#",
+"#yyyy#kkkk#uu#",
+"##.####..##.##",
+"#hhhhhhhhhhhh#",
+"#hhhhhhhhhhhh#",
+"####..###.####",
+"#llllll#ppppp#",
+"#llllll#ppppp#",
+"#llllll#ppppp#",
+"#llllll#ppppp#",
+"##############"],
+  decor:[{x:2.9,y:1.1,w:1.9,h:1.5,c:'#e85d75',t:'🛏️'},{x:1.1,y:4.05,w:1.4,h:.8,c:'#5a4632',t:'💻'},
+    {x:6.1,y:1.1,w:2.4,h:.7,c:'#6d5a45',t:''},{x:8.9,y:1.1,w:1,h:1.4,c:'#e8eef5',t:'🧊'},
+    {x:11.1,y:1.1,w:.9,h:.9,c:'#eee',t:'🚽'},{x:11.4,y:3,w:1.5,h:1.8,c:'#fff',t:'🚿'},
+    {x:1.3,y:9.1,w:3,h:1.1,c:'#5d4e8c',t:'🛋️'},{x:1.3,y:12.2,w:3,h:.6,c:'#222',t:''},
+    {x:9.5,y:10.6,w:3,h:2.1,c:'#e8d5b7',t:''},{x:12,y:9.1,w:.9,h:.9,c:'#8b5e34',t:'📦'},{x:5.9,y:12,w:.9,h:.8,c:'#8b5e34',t:'📦'}],
+  zones:{pc:{x:1.8,y:3.5,r:.8},tv:{x:2.8,y:11.3,r:1.1},bed:{x:3.85,y:2.2,r:1.1},fridge:{x:8.2,y:2.9,r:1}},
+  hides:[{x:5.6,y:9.6,n:'behind the couch'},{x:12,y:2.4,n:'in the shower'},{x:6.5,y:4.4,n:'by the counter'},{x:4.6,y:4.5,n:'behind your door'},{x:12.4,y:7.4,n:'behind the coats'}],
+  labels:[['y',2.5,4.75],['k',8,4.75],['u',12,4.75],['h',10.5,6.3],['l',4.5,11.9],['p',10.5,9.35]],
+  tvr:{x:1.45,y:12.25},tvText:11.9,pcen:{x:10.5,y:11},line:{a:{x:1.6,y:7},b:{x:12.4,y:7}},
+  tvStart:{x:6.5,y:7},sneakStart:{x:3.85,y:2.0},dogStart:{x:6,y:7},
+  q:{cookie:{x:6.6,y:2.3},phone:{x:5.5,y:11.6},drop:{x:1.4,y:1.6},ctrl:{x:8.6,y:9.6}},jar:{x:6.6,y:1.45}};
+let L=HOUSE;
+function setHome(h){L=h==='apt'?APT:HOUSE;MAP=L.map;MW=MAP[0].length;MH=MAP.length;DECOR=L.decor;ZONES=L.zones;HIDES=L.hides;
+  QUESTS.cookie.pick=L.q.cookie;QUESTS.phone.pick=L.q.phone;QUESTS.phone.drop=L.q.drop;QUESTS.controller.pick=L.q.ctrl;QUESTS.controller.drop=L.q.drop;
+  QUESTS.controller.n=h==='apt'?"Get back the controller Dad took (it's in HIS room)":"Get back the controller Mom took (it's in HER room)";
+  ROOMNAME.p=h==='apt'?"Dad's Room":"Parents' Room";}
+function story(n){
+  if(n<=2)return{home:'house',mom:true,dad:'bed',txt:'🛏️ Mom and Dad are both asleep in their room.'};
+  if(n<=5)return{home:'house',mom:true,dad:'couch',txt:'🛋️ Dad fell asleep on the couch. It messed up his sleep... now he <b>sleepwalks</b>.'};
+  if(n%2===0)return{home:'house',mom:true,dad:'away',txt:"🧳 Dad's not home tonight. Just Mom in the house."};
+  return{home:'apt',mom:false,dad:'apt',txt:"🏢 You're at <b>Dad's apartment</b>. Dad's a heavy sleeper, so <b>noise doesn't matter</b>. But the new bed messes up his sleep and he <b>sleepwalks</b>. Don't bump into him! (Stars = how fast you are)"};
+}
+const P=()=>N.mom===false?'Dad':'Mom';
+HOUSE.zones.door={x:5.4,y:22.4,r:.6};HOUSE.doorSpawn={x:5,y:21.8};HOUSE.doorDraw={x:5.5,y:23.25};
+APT.zones.door={x:1.4,y:11.3,r:.6};APT.doorSpawn={x:1.8,y:11};APT.doorDraw={x:.6,y:11.3};
+const STREET={name:'street',outside:true,map:[
+"##################",
+"#gggggggwwggggggg#",
+"#gggggggwwggggggg#",
+"#wwwwwwwwwwwwwwww#",
+"#rrrrrrrrrrrrrrrr#",
+"#rrrrrrrrrrrrrrrr#",
+"#rrrrrrrrrrrrrrrr#",
+"#wwwwwwwwwwwwwwww#",
+"#######..#########",
+"#####bbbbbbbbb####",
+"#####bbbbbbbbb####",
+"#####bbbbbbbbb####",
+"##################"],
+  decor:[{x:2,y:1.2,w:1,h:1,c:'#2f5233',t:'🌳'},{x:13.5,y:1.2,w:1,h:1,c:'#2f5233',t:'🌳'},{x:5.5,y:1.3,w:.8,h:.8,c:'#2f5233',t:'🎃'},{x:15.6,y:2.9,w:.5,h:.5,c:'#6e6e78',t:'💡'},
+    {x:5.1,y:9.1,w:.8,h:2.7,c:'#a0522d',t:'🥫'},{x:9.6,y:9.1,w:3,h:.8,c:'#8b5e34',t:'🧔'},{x:12.7,y:9.1,w:.7,h:.7,c:'#8b5e34',t:'🐈'},{x:6.3,y:11.2,w:2.4,h:.6,c:'#a0522d',t:'🥤'}],
+  zones:{home:{x:8.5,y:1.4,r:.7},shop:{x:11,y:10.4,r:.9}},hides:[],
+  labels:[['g',4,2.6],['b',9.5,11.6]],spawn:{x:8.5,y:1.8},homeDraw:{x:8.5,y:.5},shopSign:{x:7.5,y:8.5},
+  lanes:[{y:4.7,dir:1},{y:6.3,dir:-1}],road:{top:4,bot:7},cross:{x:7,w:2}};
+const APTOUT={name:'aptout',outside:true,map:[
+"################",
+"#cccccccccccccc#",
+"#cccccccccccccc#",
+"###########xx###",
+"###########xx###",
+"###########xx###",
+"#oooooooooooooo#",
+"#oooooooooooooo#",
+"#oooooooooooooo#",
+"######..########",
+"#wwwwwwwwwwwwww#",
+"#rrrrrrrrrrrrrr#",
+"#rrrrrrrrrrrrrr#",
+"#rrrrrrrrrrrrrr#",
+"#wwwwwwwwwwwwww#",
+"#####..#########",
+"###bbbbbbbbb####",
+"###bbbbbbbbb####",
+"###bbbbbbbbb####",
+"################"],
+  decor:[{x:5.6,y:1.05,w:.8,h:.5,c:'#4a3a2a',t:'🚪'},{x:8.6,y:1.05,w:.8,h:.5,c:'#4a3a2a',t:'🚪'},{x:13.3,y:1.05,w:1.4,h:.9,c:'#555',t:'🛗'},
+    {x:2,y:6.2,w:2.4,h:.9,c:'#6d4c41',t:'😴'},{x:13,y:6.1,w:1.6,h:.6,c:'#777',t:'📬'},{x:8,y:8.2,w:.8,h:.7,c:'#9a8a6a',t:'🪴'},
+    {x:3.1,y:16.1,w:.8,h:2.7,c:'#a0522d',t:'🥫'},{x:8.2,y:16.1,w:3,h:.8,c:'#8b5e34',t:'🧔'},{x:11.2,y:17.6,w:.7,h:.7,c:'#d8cfb0',t:'🐈'},{x:4.6,y:18.2,w:2.4,h:.6,c:'#a0522d',t:'🥤'}],
+  zones:{home:{x:2.5,y:1.4,r:.7},shop:{x:9.7,y:17.4,r:.9}},hides:[],
+  labels:[['c',7,2.7],['x',11.95,4.5],['o',6,7.5],['b',7,18.75]],spawn:{x:2.5,y:1.9},homeDraw:{x:2.5,y:.55},shopSign:{x:5.5,y:14.5},
+  lanes:[{y:11.7,dir:1},{y:13.3,dir:-1}],road:{top:11,bot:14},cross:{x:6,w:2},extraText:[['ELEVATOR: OUT OF ORDER',14,2.25],['Doorman (asleep)',3.2,5.85],['Apt 4B',2.5,2.45]]};
+const ITEM={sandwich:'🍞 bread',popcorn:'🍿 popcorn',cereal:'🥣 cereal',waffle:'🧇 waffles',icecream:'🍨 ice cream'};
+const itemName=()=>ITEM[N.snack].slice(ITEM[N.snack].indexOf(' ')+1);
+let errand=null,legos=[],candies=null,stun=0,storm=null,homeL=null,homeCreaks=null,cars=[],laneT=[0,0];
+function enterMap(nl,sp){L=nl;MAP=L.map;MW=MAP[0].length;MH=MAP.length;DECOR=L.decor;ZONES=L.zones;HIDES=L.hides||[];
+  player.x=sp.x;player.y=sp.y;trail=[];joy=null;cars=[];laneT=[.5,1.5];mom=null;player.hidden=false}
+function randFloor(n,opt={}){const out=[];let tries=0;
+  while(out.length<n&&tries++<2000){const x=1+Math.random()*(MW-2),y=1+Math.random()*(MH-2),tx=Math.floor(x),ty=Math.floor(y),ch=MAP[ty][tx];
+    if(ch==='#'||ch==='.')continue;if(opt.rooms&&ch==='h')continue;if(opt.hall&&ch!=='h'&&Math.random()<.5)continue;
+    if(dist({x,y},L.sneakStart)<2.5)continue;if(Object.values(ZONES).some(z=>dist(z,{x,y})<1.1))continue;if(out.some(o=>dist(o,{x,y})<(opt.gap||1.2)))continue;
+    if(wall(Math.floor(x-.3),ty)||wall(Math.floor(x+.3),ty)||wall(tx,Math.floor(y-.3))||wall(tx,Math.floor(y+.3)))continue;out.push({x,y})}return out}
+function goOutside(){homeL=L;homeCreaks=creaks;creaks=[];errand.stage=1;
+  enterMap(homeL.name==='apt'?APTOUT:STREET,(homeL.name==='apt'?APTOUT:STREET).spawn);
+  banner(homeL.name==='apt'?'🏢 OUT OF THE APARTMENT':'🌙 OUTSIDE','#9bf6ff');beep(200,.2,'triangle',.06);
+  toast(homeL.name==='apt'?'Elevator is broken. Take the stairs down, out the lobby, cross the street.':'Cross the street to the bodega. Watch for cars!');refreshObj()}
+function goHome(){creaks=homeCreaks;enterMap(homeL,homeL.doorSpawn);errand.stage=3;if(dog){dog.x=player.x;dog.y=player.y}
+  if(dad){dad.path=[];dad.follow=0}toast('🤫 Back inside. Quiet again...');refreshObj()}
+function outsideUpdate(dt){noise=Math.max(0,noise-10*dt);player.near=1;
+  L.lanes.forEach((ln,i)=>{laneT[i]-=dt;if(laneT[i]<=0){laneT[i]=1.6+Math.random()*2.6;
+    cars.push({x:ln.dir>0?-1.5:MW+1.5,y:ln.y,dir:ln.dir,sp:4+Math.random()*3+Math.min(night,12)*.15,col:['#e63946','#ffd166','#3a86ff','#06d6a0','#f1f1f1','#9b5de5'][Math.random()*6|0]})}});
+  cars.forEach(c=>c.x+=c.dir*c.sp*dt);cars=cars.filter(c=>c.x>-3&&c.x<MW+3);
+  for(const c of cars)if(Math.abs(player.y-c.y)<.55&&Math.abs(player.x-c.x)<.95){
+    const mid=(L.road.top+L.road.bot)/2;player.y=player.y<mid?L.road.top-.45:L.road.bot+.45;shake=.5;
+    beep(420,.25,'square',.08);setTimeout(()=>beep(380,.3,'square',.08),180);toast('🚗 HONNNK! Jumped back to the sidewalk!');break}
+}
+HOUSE.roam=[{x:3,y:2},{x:3,y:7.5},{x:3,y:12.5},{x:3,y:18},{x:12,y:8},{x:12,y:2.5},{x:8,y:4},{x:8,y:12},{x:8,y:20},{x:12.5,y:17.5}];HOUSE.dadStart={x:3.5,y:18.5};
+APT.roam=[{x:2.5,y:3},{x:8,y:3},{x:12,y:3},{x:4,y:7},{x:10,y:7},{x:3,y:10.5},{x:10.5,y:9.5},{x:5,y:11}];APT.dadStart={x:10.5,y:9.5};
+function bfs(sx,sy,tx,ty){sx|=0;sy|=0;tx|=0;ty|=0;const k=(x,y)=>x+','+y,prev=new Map([[k(sx,sy),null]]),q=[[sx,sy]];
+  while(q.length){const [x,y]=q.shift();if(x===tx&&y===ty)break;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(wall(nx,ny)||prev.has(k(nx,ny)))continue;prev.set(k(nx,ny),[x,y]);q.push([nx,ny])}}
+  if(!prev.has(k(tx,ty)))return[];const path=[];let c=[tx,ty];while(c){path.unshift({x:c[0]+.5,y:c[1]+.5});c=prev.get(k(c[0],c[1]))}return path.slice(1)}
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+function makeCreaks(){
+  creaks=[];const n=4+Math.min(night,8)*2;
+  if(L.name==='apt'){
+    for(let i=0;i<Math.min(9,n);i++){const x=1+Math.floor(Math.random()*12),y=Math.random()<.5?6:7;if(x===2||creaks.some(c=>c.x===x))continue;creaks.push({x,y,hit:0})}
+    creaks.push({x:7,y:3,hit:0},{x:3,y:11,hit:0});return}
+  for(let i=0;i<n;i++){
+    const y=2+Math.floor(Math.random()*20);if(y===8||y===9)continue;
+    const x=Math.random()<.5?7:8;
+    if(creaks.some(c=>c.y===y))continue;
+    creaks.push({x,y,hit:0});
+  }
+  creaks.push({x:11,y:10,hit:0},{x:2,y:2,hit:0});
+}
+function isNew(k){save.seen=save.seen||[];if(save.seen.includes(k))return'';save.seen.push(k);persist();return'<span class="newtag">NEW</span> '}
+function startNight(){if(night>(save.reached||0)){save.reached=night;persist()}
+  const st=story(night);setHome(st.home);
+  player={x:L.tvStart.x,y:L.tvStart.y,face:1,step:0};gameMin=1260;noise=0;maxNoise=0;dad=null;dog=null;mom=null;parts=[];tvOnNight=false;
+  if(L.name==='house'){HOUSE.bro.t='😪';HOUSE.pbed.t=st.dad==='bed'?'😴😴':'😴';HOUSE.couch.t=st.dad==='couch'?'😴':'🛋️'}
+  makeCreaks();
+  const spring=night%4===0;
+  let ev=null;if(night>=2){const opts=(night>=4?['power','dog','tvon','legos','storm']:['power','dog','tvon']).filter(e=>e!==lastEvent);ev=opts[Math.random()*opts.length|0];lastEvent=ev}
+  let snack=['sandwich','popcorn','cereal','waffle','icecream'][(night-1)%5];if(story(night).home==='apt')ev=[null,'power','legos'][Math.random()*3|0];
+  if(ev==='power'&&(snack==='popcorn'||snack==='waffle'))snack=snack==='popcorn'?'cereal':'icecream';
+  if(night%5===0)snack='candy';
+  const qs=Object.keys(QUESTS);
+  N={spring,ev,snack,quest:qs[Math.random()*qs.length|0],brother:L.name==='house'&&night>=2&&Math.random()<.5,errand:snack!=='candy'&&night>5&&Math.random()<(st.home==='apt'?.6:.3),dad:st.dad==='couch'||st.dad==='apt',mom:st.mom,story:st};
+  $('noiseWrap').firstChild.textContent=st.mom?'😴 Parents ':'😴 Dad ';
+  $('night').textContent='Night '+night;
+  ['title','endScreen','shop'].forEach(i=>$(i).classList.add('hidden'));
+  $('hud').classList.remove('hidden');$('noiseWrap').style.opacity=.35;$('noiseWrap').style.display=N.mom?'':'none';$('quest').classList.add('hidden');
+  phase='intro';$('obj').textContent='Night '+night;
+  const q=QUESTS[N.quest];
+  openMini(`<h2>Night ${night}</h2><div class="big">${spring?'🌸':'🍂'}</div>
+   <p><b>${spring?'SPRING FORWARD night. You LOSE an hour, so way less time!':'FALL BACK night. Free extra hour!'}</b></p>
+   <div class="card">${st.txt}<br>🍽️ Snack tonight: <b>${isNew('s_'+snack)+SNACKS[snack]}</b>${snack==='candy'?'<br>'+isNew('candy')+"Mom hid the Halloween candy. Find all 5 🍬 in the dark!":''}<br>${ev?'⚠️ <b>'+isNew('e_'+ev)+EVENTS[ev].n+'</b>: '+EVENTS[ev].d:'😌 Quiet night... for now'}<br>${q.icon} Side quest: ${q.n} <b>(+1⭐)</b></div>
+   <button id="goNight">START</button>`);
+  $('goNight').onclick=()=>{closeMini();setPhase('tv');toast(spring?'🌸 March. The clocks spring FORWARD at 2 AM...':'🍂 The clocks fall back at 2 AM...')};
+}
+function targetKey(){
+  if(phase==='tv')return'tv';if(phase==='bed1')return'bed';
+  if(phase==='sneak'){if(L.outside)return errand.stage===1?'shop':'home';if(errand&&errand.stage===0)return'door';if(N.snack==='candy')return null;return'fridge'}
+  if(phase==='ret')return brother.awake&&!brother.fed?'bro':'bed';return null}
+function refreshObj(){
+  const t={tv:'📺 Go watch TV in the living room',bed1:'🛏️ '+P()+' says BED. Go to your room',sneak:L.outside?(errand.stage===1?(L.name==='aptout'?'🏪 Stairs down → out the lobby → bodega':'🏪 Get to the bodega across the street'):'🏠 Head back home'):errand&&errand.stage===0?'🚪 Out of '+itemName()+'! Go out the front door (living room)':errand&&errand.stage===3?SNACK_IC[N.snack]+' Back to the kitchen':N.snack==='candy'?'🍬 Find the hidden candy: '+(candies?candies.filter(c=>c.got).length:0)+'/5 (no arrows!)':SNACK_IC[N.snack]+' Sneak to the kitchen',
+    ret:brother.awake&&!brother.fed?'👀 Bring your brother a snack (or he snitches)':'🤫 Get back to bed quietly'}[phase];
+  if(t)$('obj').textContent=t+(tvOnNight&&sneaking()?' · 📺 turn off TV!':'');
+}
+function setPhase(p){phase=p;refreshObj()}
+function updQuest(){const q=QUESTS[quest.k];
+  $('quest').textContent=quest.stage===2?'✅ Side quest done! +1⭐':'⭐ Side quest: '+q.icon+' '+(quest.stage===1?'Bring it to the charger in your room':q.n)}
+
+let bannerTO;function banner(t,c){const b=$('banner');b.textContent=t;b.style.color=c||'#fff';b.style.opacity=1;clearTimeout(bannerTO);bannerTO=setTimeout(()=>b.style.opacity=0,1800)}
+let toastTO;function toast(t){const s=$('toastTxt');s.textContent=t;s.style.opacity=1;clearTimeout(toastTO);toastTO=setTimeout(()=>s.style.opacity=0,2400)}
+let seqTO=[];function toastSeq(arr){seqTO.forEach(clearTimeout);seqTO=arr.map((m,i)=>setTimeout(()=>toast(m),i*2600))}
+function fmt(m){m=((Math.floor(m)%1440)+1440)%1440;let h=Math.floor(m/60),mm=m%60,ap=h<12?'AM':'PM';h=h%12||12;return h+':'+String(mm).padStart(2,'0')+' '+ap}
+
+// ---------- INPUT ----------
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key.startsWith('Arrow')||e.key===' ')e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+let joy=null;
+cv.addEventListener('pointerdown',e=>{joy={id:e.pointerId,ox:e.clientX,oy:e.clientY,x:e.clientX,y:e.clientY}});
+cv.addEventListener('pointermove',e=>{if(joy&&joy.id===e.pointerId){joy.x=e.clientX;joy.y=e.clientY}});
+const endJoy=e=>{if(joy&&joy.id===e.pointerId)joy=null};
+cv.addEventListener('pointerup',endJoy);cv.addEventListener('pointercancel',endJoy);
+const JR=60,TIPTOE=.6;
+
+// ---------- UPDATE ----------
+function collide(nx,ny,r){for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]])if(wall(Math.floor(nx+ox),Math.floor(ny+oy)))return true;return false}
+function los(a,b){const d=dist(a,b),n=Math.ceil(d/.2);for(let i=1;i<n;i++){const x=a.x+(b.x-a.x)*i/n,y=a.y+(b.y-a.y)*i/n;if(wall(Math.floor(x),Math.floor(y)))return false}return true}
+const walking=()=>['tv','bed1','sneak','ret'].includes(phase);
+const sneaking=()=>phase==='sneak'||phase==='ret';
+const BUSTED=()=>lose('😡','BUSTED!',P()+': "WHY ARE YOU AWAKE AT '+fmt(gameMin)+'?!"<br>No snacks for a week.');
+
+function update(dt){
+  parts=parts.filter(p=>(p.t-=dt)>0);parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt});
+  shake=Math.max(0,shake-dt);
+  if(!walking())return;
+  let ix=0,iy=0,m=0;
+  if(keys['a']||keys['arrowleft'])ix-=1;if(keys['d']||keys['arrowright'])ix+=1;
+  if(keys['w']||keys['arrowup'])iy-=1;if(keys['s']||keys['arrowdown'])iy+=1;
+  if(ix||iy){const l=Math.hypot(ix,iy);ix/=l;iy/=l;m=keys['shift']?1:TIPTOE}
+  if(joy){const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy);if(d>8){m=Math.min(1,d/JR);ix=dx/d;iy=dy/d}}
+  if(stun>0){stun-=dt;m=0}
+  const sp=4.4*m,r=.28;
+  const nx=player.x+ix*sp*dt,ny=player.y+iy*sp*dt;
+  if(!collide(nx,player.y,r))player.x=nx;if(!collide(player.x,ny,r))player.y=ny;
+  if(ix)player.face=ix>0?1:-1;
+  player.step+=dt*sp*2.4;player.run=m>.75;
+  trailT+=dt;if(trailT>.08){trailT=0;trail.push({x:player.x,y:player.y});if(trail.length>40)trail.shift()}
+
+  if(phase==='tv'||phase==='bed1')gameMin=Math.min(1439,gameMin+dt*.6);
+  if(sneaking()){
+    sneakT+=dt;gameMin=N.start+sneakT/sneakSecs*60;
+    if(gameMin>=N.end)return lose('⏰','It\'s '+fmt(N.end)+' already',"You ran out of time. Tomorrow you're a zombie 🧟");
+    if(L.outside){outsideUpdate(dt)}else{
+    const room=MAP[Math.floor(player.y)][Math.floor(player.x)],inParents=room==='p';
+    const sock=has('socks')?.6:1;
+    const pd=dist(player,L.pcen);
+    const near=inParents?2:1+Math.max(0,Math.min(.8,(9-pd)/9*.8));
+    player.near=near;
+    const cover=storm&&storm.cover>0?0:1;
+    if(m>.75){noise+=(m-.75)*170*dt*sock*near*cover;if(Math.random()<dt*6)beep(90,.05,'triangle',.05)}
+    if(inParents&&m>.05)noise+=4*dt;
+    if(tvOnNight)noise+=4.5*dt;
+    noise=Math.max(0,noise-10*dt);
+    // storm
+    if(storm){storm.t-=dt;storm.cover=Math.max(0,storm.cover-dt);
+      if(storm.t<=0){storm.t=6+Math.random()*5;const th=$('thunder');th.style.transition='none';th.style.opacity=.75;setTimeout(()=>{th.style.transition='opacity .6s';th.style.opacity=0},90);
+        setTimeout(()=>{if(!storm)return;storm.cover=2.6;shake=.5;beep(55,1.2,'sawtooth',.12,-20);beep(40,1.4,'triangle',.1);banner('⚡ THUNDER! RUN NOW!','#9bf6ff')},450)}}
+    // legos
+    for(const lg of legos){if(!lg.hit&&dist(lg,player)<.38){lg.hit=1;stun=.9;noise+=22*near*cover;shake=.4;beep(900,.15,'square',.07,400);toast('🧱 OWWWW!!! (LEGO)')}}
+    // candy hunt
+    if(candies)for(const c of candies){if(!c.got&&dist(c,player)<.55){c.got=1;burst(c.x,c.y,'#ff8fab');beep(880+candies.filter(k=>k.got).length*120,.1);
+      const n=candies.filter(k=>k.got).length;toast('🍬 Found candy! '+n+'/5');refreshObj();if(n>=5){banner('🍬 ALL THE CANDY!','#ff8fab');setPhase('ret')}}}
+    // creaks
+    const tx=Math.floor(player.x),ty=Math.floor(player.y);
+    for(const c of creaks){if(c.x===tx&&c.y===ty){if(!c.on){c.on=1;c.hit=1;noise+=28*sock*near*cover;shake=.25;beep(70,.35,'sawtooth',.09,40);toast('😬 CRRREEEAAAK');}}else c.on=0;c.hit=Math.max(0,c.hit-dt)}
+    // tv off
+    if(tvOnNight&&dist(player,ZONES.tv)<1.1){tvOnNight=false;beep(300,.05);toast('📺 *click* TV off. Phew.');refreshObj()}
+    // dog
+    if(dog){const tgt=trail[Math.max(0,trail.length-10)]||player;
+      if(dist(dog,player)>1.1){const dx=tgt.x-dog.x,dy=tgt.y-dog.y,d=Math.hypot(dx,dy);if(d>.05){const s=Math.min(d,5*dt);dog.x+=dx/d*s;dog.y+=dy/d*s;dog.face=dx>0?1:-1}}
+      dog.bark-=dt*(player.run?3:1);dog.woof=Math.max(0,dog.woof-dt);
+      if(dog.bark<=0){dog.bark=6+Math.random()*5;noise+=13;dog.woof=1;beep(500,.08,'square',.07,-200);setTimeout(()=>beep(450,.1,'square',.07,-200),130);toast('🐕 WOOF!')}}
+    if(!N.mom){noise=0;maxNoise=0}
+    maxNoise=Math.max(maxNoise,noise);
+    if(noise>=100)return BUSTED();
+    // mom
+    player.hidden=HIDES.some(h=>dist(h,player)<.75);
+    if(!mom&&N.mom){momCD-=dt;
+      if(noise>=65&&momCD<=0){mom={x:9.6,y:19.5,wp:[{x:8,y:19.5},{x:8,y:2},{x:8,y:19.5},{x:11,y:19.5}],i:0};
+        banner('👩 MOM HEARD SOMETHING!','#ff8fab');toast('🫥 HIDE in a hiding spot or stay out of her sight!');beep(330,.3,'triangle',.1,-100)}}
+    else if(mom){const w=mom.wp[mom.i],dx=w.x-mom.x,dy=w.y-mom.y,d=Math.hypot(dx,dy),s=2.3*dt;
+      if(d<=s){mom.x=w.x;mom.y=w.y;mom.i++;if(mom.i>=mom.wp.length){mom=null;momCD=10;toast('😮‍💨 Mom went back to bed')}}
+      else{mom.x+=dx/d*s;mom.y+=dy/d*s;mom.face=dx>.01?1:dx<-.01?-1:mom.face}
+      if(mom&&!player.hidden&&dist(mom,player)<3.2&&los(mom,player))return lose('👩','CAUGHT!','Mom: "I KNEW I heard something!"<br>No snacks for a week.')}
+    // dad
+    if(dad){
+      const see=!player.hidden&&dist(dad,player)<2&&los(dad,player);
+      if(see){if(!dad.follow){dad.follow=1;dad.notice=.9;dad.path=[];toast('😵 Dad is sleep-FOLLOWING you! Lose him or hide 🫥');beep(160,.4,'triangle',.08,-60)}dad.lost=1;dad.last={x:player.x,y:player.y}}
+      else if(dad.follow){dad.lost-=dt;if(dad.lost<=0){dad.follow=0;dad.path=[];dad.wait=1.5;toast('😮‍💨 Dad lost you')}}
+      const stepTo=(tx,ty,sp)=>{const dx=tx-dad.x,dy=ty-dad.y,d=Math.hypot(dx,dy);if(d<.02)return true;const st=Math.min(d,sp*dt);
+        const nx=dad.x+dx/d*st,ny=dad.y+dy/d*st;if(!collide(nx,dad.y,.25))dad.x=nx;if(!collide(dad.x,ny,.25))dad.y=ny;dad.face=dx>0?1:-1;return d<.1};
+      if(dad.follow&&dad.notice>0){dad.notice-=dt}
+      else if(dad.follow){if(stepTo(dad.last.x,dad.last.y,dad.fspeed)&&!see)dad.lost=Math.min(dad.lost,.3)}
+      else if(dad.path.length){const n=dad.path[0],dx=n.x-dad.x,dy=n.y-dad.y,d=Math.hypot(dx,dy),st=dad.speed*dt;
+        if(d<=st){dad.x=n.x;dad.y=n.y;dad.path.shift()}else{dad.x+=dx/d*st;dad.y+=dy/d*st;dad.face=dx>0?1:dx<0?-1:dad.face}}
+      else if((dad.wait-=dt)<=0){const p=L.roam[Math.random()*L.roam.length|0];dad.path=bfs(dad.x,dad.y,p.x,p.y);dad.wait=.8+Math.random()*1.8}
+      if(dist(dad,player)<.5)return lose('🧟','BUMPED INTO DAD','Dad was sleepwalking and you walked right into him. He screamed. Everyone is awake now.');
+    }
+    // side quest
+    if(quest&&quest.stage<2){const q=QUESTS[quest.k],tg=quest.stage===0?q.pick:q.drop;
+      if(dist(player,tg)<.8){
+        if(quest.stage===0){noise+=6*near;beep(880,.08);if(q.drop){quest.stage=1;toast('Got the '+q.icon+'! Now bring it to your room')}else{quest.stage=2;toast(q.icon+' Got it! +1⭐');burst(tg.x,tg.y,'#ffd166')}}
+        else{quest.stage=2;beep(660,.08);setTimeout(()=>beep(990,.12),80);toast('✅ Side quest done! +1⭐');burst(tg.x,tg.y,'#ffd166')}
+        updQuest()}}
+    // computer
+    if(!hasStreamix){const d=dist(player,ZONES.pc);
+      if(d<ZONES.pc.r&&!pcDismiss){joy=null;return openPC()} if(d>ZONES.pc.r+.6)pcDismiss=false}
+  }}
+  // main zones
+  const zk=targetKey(),z=ZONES[zk];
+  if(phase==='ret'&&ZONES.bed&&dist(player,ZONES.bed)<ZONES.bed.r){
+    if(brother.awake&&!brother.fed)return lose('😤','YOUR BROTHER SNITCHED','You didn\'t bring him a snack.<br>He marched straight into Mom\'s room and told on you.');
+    return win();
+  }
+  if(z&&dist(player,z)<z.r){
+    if(phase==='tv'){joy=null;tvGame()}
+    else if(phase==='bed1'){joy=null;sleepScene()}
+    else if(zk==='fridge'){
+      if(errand&&errand.stage===-1){errand.stage=0;banner('😱 OUT OF '+itemName().toUpperCase()+'!','#ff8fab');beep(180,.4,'sawtooth',.07,-80);
+        toast(L.name==='apt'?'Gotta go out to the bodega. Front door is in the living room.':'Gotta go to the bodega. Front door is in the living room.');refreshObj()}
+      else{joy=null;snackGame()}}
+    else if(zk==='door'){goOutside()}
+    else if(zk==='shop'){errand.stage=2;beep(880,.08);setTimeout(()=>beep(1175,.12),90);burst(player.x,player.y,'#ffd166');toast('🧔 "That\'s $3, kid." Got the '+ITEM[N.snack]+'! Now head home.');refreshObj()}
+    else if(zk==='home'){goHome()}
+    else if(zk==='bro'){brother.fed=true;beep(523,.08);setTimeout(()=>beep(659,.1),90);toast('😋 Brother: "thanks bro. I won\'t tell."');HOUSE.bro.t='😋';refreshObj()}
+  }
+  $('bigclock').textContent=fmt(gameMin);
+  $('noiseFill').style.width=Math.min(100,noise)+'%';
+  const nr=sneaking()&&player.near>1.05?player.near:0;$('nearX').textContent=nr?'🔊x'+nr.toFixed(1):'';$('nearX').style.color=nr>=2?'#ff4d6d':'#ffd166';
+}
+function burst(x,y,col){for(let i=0;i<14;i++){const a=Math.random()*6.28,s=1+Math.random()*3;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:.6,col})}}
+
+// ---------- MINI GAMES ----------
+function openMini(html){const m=$('mini');m.innerHTML=html;m.classList.remove('hidden')}
+function closeMini(){$('mini').classList.add('hidden')}
+
+let tvTimer;
+const CHANNELS=[['📰','Ch 2 · WZAP Late Night News'],['🌦️','Ch 5 · Storm Tracker 5'],['🐟',"Ch 7 · Bob's Fishing Hour"],['💼','Ch 11 · Infomercial Island'],['🍳','Ch 14 · Cooking With Carla'],['🏌️','Ch 17 · Golf Snooze Network'],['🦷','Ch 20 · Dentist TV'],['🛍️','Ch 23 · Home Shopping Blast'],['🐶','Ch 26 · Pet Psychic Live'],['🎳','Ch 28 · Bowling Tonight'],['🚜','Ch 33 · Lawnmower Racing'],['🛏️','Ch 36 · Mattress Kingdom'],['🧦','Ch 40 · Public Access Puppets'],['📡','Ch 44 · Pure Static'],['🧘','Ch 47 · Calm Rain Sounds'],['🏛️','Ch 52 · Town Council Replay'],['🧹','Ch 58 · Vacuum Reviews'],['🐌','Ch 61 · Snail Cam']];
+function doneTV(list){setTimeout(()=>{closeMini();$('sx').classList.add('hidden');setPhase('bed1');banner(P().toUpperCase()+': "BED. NOW."','#ffd166');toast('🎃 Watched: '+list.join(', '));gameMin=Math.max(gameMin,1435)},900)}
+function tvGame(){
+  setPhase('tvgame');
+  if(hasStreamix)return streamixGame();
+  let got=0,cur=null,speed=1800,watched=[];
+  openMini(`<h2>📺 Channel Surf</h2><p>Tap <b>WATCH</b> when a 🎃 spooky movie is on. Get 3!</p>
+    <div id="tv"><span id="tvE">📺</span><div id="tvLabel"></div></div><p id="tvScore" style="font-size:22px;font-weight:800">🎃 0/3</p><button id="tvBtn">WATCH!</button>`);
+  const next=()=>{
+    if(Math.random()<.35&&!(cur&&cur.spooky)){cur={e:'🎃',spooky:true,title:nextSpooky()};$('tvLabel').textContent='Ch 31 · FrightNight: "'+cur.title+'"'}
+    else{let c;do{c=CHANNELS[Math.random()*CHANNELS.length|0]}while(cur&&c[1]===cur.name);cur={e:c[0],name:c[1]};$('tvLabel').textContent=c[1]}
+    $('tvE').textContent=cur.e;beep(1200,.02,'square',.02);tvTimer=setTimeout(next,speed)};
+  next();
+  $('tvBtn').onclick=()=>{
+    if(cur.spooky){got++;watched.push(cur.title);cur.spooky=false;beep(523,.1);setTimeout(()=>beep(784,.15),80);$('tvE').textContent='😱';speed=Math.max(1300,speed-150);
+      if(got>=3){clearTimeout(tvTimer);$('tvScore').textContent='🎃 3/3';return doneTV(watched)}}
+    else{got=Math.max(0,got-1);watched.pop();beep(150,.2,'sawtooth',.05);$('tvE').textContent='🥱'}
+    $('tvScore').textContent='🎃 '+got+'/3';clearTimeout(tvTimer);tvTimer=setTimeout(next,900);
+  };
+}
+
+// ---------- STREAMIX ----------
+function openPC(){
+  pcPrev=phase;phase='pc';
+  openMini(`<div class="pc"><div class="logo">STREAMIX</div><p><b>Every movie. Every show.</b><br>Free 31-day spooky trial 🎃</p>
+   <p style="font-size:13px;opacity:.7">Typing makes a little noise...</p>
+   <button id="pcYes" style="background:#e50914;color:#fff;box-shadow:0 5px 0 #7a050b">GET STREAMIX</button><br><button id="pcNo" style="font-size:15px;padding:10px 20px">Nah</button></div>`);
+  $('pcYes').onclick=()=>{let k=0;const ty=setInterval(()=>{beep(1400+Math.random()*400,.02,'square',.03);if(++k>10)clearInterval(ty)},60);
+    noise+=12;maxNoise=Math.max(maxNoise,noise);hasStreamix=true;try{localStorage.setItem('fallback_streamix','1')}catch(e){}
+    $('mini').querySelector('.pc').innerHTML='<div class="logo">STREAMIX</div><div class="big">✅</div><p><b>You got Streamix!</b><br>Tomorrow night, find the spooky movies in the catalogue.</p>';
+    setTimeout(()=>{closeMini();phase=pcPrev;pcDismiss=true},1400)};
+  $('pcNo').onclick=()=>{closeMini();phase=pcPrev;pcDismiss=true};
+}
+function streamixGame(){
+  const A=['Midnight','Haunted','Lucky','Secret','Last','Golden','Tiny','Shadow','Crazy','Silent','Frozen','Wild','Cozy','Hidden','Upside-Down','Electric','Creepy','Dark','Moonlight','Spooky'];
+  const N=[['Bakery','🧁'],['Summer','🏖️'],['Pizza Party','🍕'],['Road Trip','🚗'],['Goalkeeper','⚽'],['Hamster','🐹'],['Wedding','💍'],['Robot','🤖'],['Science Fair','🔬'],['Cowboy','🤠'],['Llama','🦙'],['Detective','🕵️'],['Prom','💃'],['Garden','🌻'],['Surf Camp','🏄'],['Spelling Bee','🐝'],['Talent Show','🎤'],['Bake-Off','🎂'],['Camp Counselor','⛺'],['Dog Show','🐕']];
+  const G=[['Comedy','A totally normal family gets into silly trouble. Zero scares.'],['Romance','Two people fall in love. Lots of staring. Not spooky.'],['Kids','Bright colors and a talking animal. Very safe.'],['Documentary','Real facts about real stuff. Informative, not scary.'],['Cooking Show','Contestants make food under pressure. The only scary thing is the judges.'],['Reality','People yell at each other in a big house.'],['Sports','An underdog team wins the big game.'],['Action','Explosions! Car chases! But not spooky.']];
+  const DECOY_POSTERS=['👻','🎃','🦇','🌙','🕸️','🏚️','🔦','🪦'],SP_POSTERS=['🚪','🌲','🏠','🪞','🧸','📼','🚌','🌽','🛁','🌫️'];
+  const used=new Set(),items=[];
+  while(items.length<77){const a=A[Math.random()*A.length|0],n=N[Math.random()*N.length|0],tt='The '+a+' '+n[0];if(used.has(tt))continue;used.add(tt);
+    const g=G[Math.random()*G.length|0];items.push({t:tt,e:Math.random()<.22?DECOY_POSTERS[Math.random()*8|0]:n[1],g:g[0],d:g[1]})}
+  const spooky=Array.from({length:22},()=>0).map(()=>({t:nextSpooky(),e:SP_POSTERS[Math.random()*SP_POSTERS.length|0],g:'Horror',d:'Something is very, very wrong in this house. 😱',sp:true}));
+  const ROWS=['Trending Now','Spooky Season Picks 🎃','Because You Watched Golf','New Releases','Top 10 in Your House','Hidden Gems','Continue Watching (Dad)','Award Winners','Weird Stuff We Bought','Still Loading...','Picked Just For You'];
+  // spooky can't go in the "Spooky Season" row (lol)
+  const rowsData=ROWS.map(()=>[]);items.forEach((it,i)=>rowsData[i%ROWS.length].push(it));
+  rowsData[1].forEach(it=>{it.g='Cozy Baking';it.d='A gentle pumpkin bread competition. Not scary at all.'});
+  spooky.forEach(sp=>{let r;do{r=Math.random()*ROWS.length|0}while(r===1);const row=rowsData[r];row.splice(Math.random()*(row.length+1)|0,0,sp)});
+  
+  let found=[],checked=0;
+  const sx=$('sx');
+  const hue=()=>`hsl(${Math.random()*360|0},35%,${22+Math.random()*12|0}%)`;
+  sx.innerHTML=`<div class="logo">STREAMIX</div><div class="found"><span id="sxFound">🎃 0/3 spooky movies found</span><span id="sxChk" style="font-size:12px;opacity:.6">0 checked</span></div>`+
+    ROWS.map((r,i)=>`<h3>${r}</h3><div class="rowx">${rowsData[i].map((it,j)=>`<div class="tile" data-r="${i}" data-j="${j}" style="background:${hue()}"><b>${it.e}</b><span>${it.t}</span></div>`).join('')}</div>`).join('');
+  sx.classList.remove('hidden');sx.scrollTop=0;
+  sx.querySelectorAll('.tile').forEach(el=>el.onclick=()=>{
+    const it=rowsData[+el.dataset.r][+el.dataset.j];if(found.includes(it.t))return;
+    const old=$('sheet');if(old)old.remove();
+    const sh=document.createElement('div');sh.id='sheet';
+    sh.innerHTML=`<div style="font-size:50px">${it.e}</div><h2 style="font-size:22px">${it.t}</h2><div class="g">${it.g}</div><p style="font-size:14px;opacity:.85">${it.d}</p><button id="shW" style="background:#e50914;color:#fff;box-shadow:0 5px 0 #7a050b">▶ WATCH</button> <button id="shX" style="background:#444;color:#fff;box-shadow:0 5px 0 #222">Back</button>`;
+    sx.appendChild(sh);
+    if(!el.classList.contains('seen')){checked++;$('sxChk').textContent=checked+' checked'}
+    $('shX').onclick=()=>{sh.remove();el.classList.add('seen')};
+    $('shW').onclick=()=>{
+      if(it.sp){found.push(it.t);beep(523,.1);setTimeout(()=>beep(784,.15),80);el.style.outline='3px solid #ffd166';el.classList.add('seen');sh.remove();
+        $('sxFound').textContent='🎃 '+found.length+'/3 spooky movies found';toast('😱 Watching "'+it.t+'"');
+        if(found.length>=3)doneTV(found);}
+      else{beep(150,.2,'sawtooth',.05);sh.querySelector('p').innerHTML='🥱 Not spooky. Keep looking.';el.classList.add('seen')}
+    };
+  });
+}
+
+function sleepScene(){
+  setPhase('sleep');
+  openMini(`<div class="big">😴</div><div id="sleepClock">12:00 AM</div><p id="sleepTxt">Zzz...</p><div id="sleepBtn"></div>`);
+  let m=0;
+  const tick=setInterval(()=>{
+    m+=4;if(m>=119){m=119;clearInterval(tick);
+      $('sleepClock').textContent='1:59 AM';
+      setTimeout(()=>{$('sleepClock').textContent='2:00 AM';beep(880,.1)},700);
+      setTimeout(()=>{shake=.6;
+        if(N.spring){$('sleepClock').textContent='3:00 AM';$('sleepClock').style.color='#ff8fab';beep(220,.3,'sawtooth',.08,200);banner('SPRING FORWARD!','#ff8fab');
+          $('sleepTxt').innerHTML='The clocks just JUMPED ahead. You LOST an hour 😬<br><b>You wake up STARVING 🤤</b><br>Way less time tonight. Hurry.';}
+        else{$('sleepClock').textContent='1:00 AM';$('sleepClock').style.color='#ffd166';beep(220,.4,'sawtooth',.08,-120);banner('FALL BACK!','#ffd166');
+          $('sleepTxt').innerHTML='The clocks just fell back an hour.<br><b>You wake up STARVING 🤤</b><br>Free hour = snack time. Don\'t wake anyone.';}
+        $('sleepBtn').innerHTML='<button id="goSneak">SNEAK 🤫</button>';$('goSneak').onclick=startSneak;},1600);}
+    else $('sleepClock').textContent=fmt(m);
+  },60);
+}
+function startSneak(){
+  closeMini();cancelAnimationFrame(miniRaf);sneakT=0;noise=0;maxNoise=0;
+  if(L.outside){creaks=homeCreaks||creaks}setHome(N.story.home);cars=[];
+  errand=N.errand?{stage:-1}:null;stun=0;
+  legos=N.ev==='legos'?randFloor(L.name==='apt'?9:14,{hall:1}):[];
+  candies=N.snack==='candy'?randFloor(5,{rooms:1,gap:3}).map(c=>({...c,got:0})):null;
+  storm=N.ev==='storm'?{t:4,cover:0}:null;
+  N.start=N.spring?180:60;N.end=N.start+60;gameMin=N.start;
+  sneakSecs=Math.max(55,110-night*8)*(N.spring?.65:1)+(N.errand?45:0);
+  player={x:L.sneakStart.x,y:L.sneakStart.y,face:1,step:0};trail=[];
+  creaks.forEach(c=>{c.on=0;c.hit=0});
+  dad=N.dad?{x:L.dadStart.x,y:L.dadStart.y,path:[],wait:2,follow:0,lost:0,face:1,speed:Math.min(1.8,1.1+night*.05),fspeed:L.name==='apt'?2.3:Math.min(2,1.5+night*.05),notice:0}:null;
+  dog=N.ev==='dog'?{x:L.dogStart.x,y:L.dogStart.y,bark:5,woof:0,face:1}:null;
+  tvOnNight=N.ev==='tvon';mom=null;momCD=0;
+  brother={awake:N.brother,fed:false};if(L.name==='house')HOUSE.bro.t=N.brother?'👀':'😪';
+  quest={k:N.quest,stage:0};
+  $('noiseWrap').style.opacity=1;$('noiseWrap').style.display=N.mom?'':'none';$('quest').classList.remove('hidden');updQuest();
+  setPhase('sneak');$('bigclock').textContent=fmt(gameMin);
+  const msgs=[];
+  if(brother.awake)msgs.push('👀 Brother: "Bring me a snack too or I\'m telling Mom."');
+  if(N.ev)msgs.push(EVENTS[N.ev].n+'! '+EVENTS[N.ev].d);
+  if(dad)msgs.push('🧟 Dad is sleepwalking in the hallway');
+  if(!hasStreamix)msgs.push('💻 Psst... you could get Streamix on your computer');
+  toastSeq(msgs);
+}
+
+// ---------- SNACKS ----------
+function snackDone(ic,msg){cancelAnimationFrame(miniRaf);beep(300,.1,'triangle',.08);setTimeout(()=>beep(260,.1,'triangle',.08),150);
+  setTimeout(()=>{closeMini();setPhase('ret');toast(msg)},900)}
+function snackFail(n,em,t,txt){if(!N.mom){$('mini').animate([{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'none'}],{duration:200});return false}noise+=n;maxNoise=Math.max(maxNoise,noise);shake=.3;
+  $('mini').animate([{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'none'}],{duration:200});
+  if(noise>=100){cancelAnimationFrame(miniRaf);closeMini();lose(em,t,txt);return true}return false}
+function waffleGame(){
+  const win=has('master')?.9:.6;let got=0,state='idle',popAt=0,popT=0;
+  openMini(`<h2>🧇 Toaster Waffles</h2><p>Push it down, wait for the POP, then <b>CATCH</b> it fast!<br>Too slow = it hits the floor (loud).</p>
+    <div class="toaster"><div id="wf">🧇</div><div class="tbody">🍞</div></div><p id="wScore" style="font-size:20px;font-weight:800">🧇 0/2</p>
+    <p style="font-size:13px">😴 ${P()} <span id="mNoise"></span></p><button id="wBtn">PUSH DOWN ⬇️</button>`);
+  const wf=$('wf'),btn=$('wBtn');let last=performance.now();
+  const loop=now=>{const dt=(now-last)/1000;last=now;
+    if(state==='toast'&&now>=popAt){state='pop';popT=now;wf.style.transform='translateY(-90px)';btn.textContent='CATCH! 🖐️';beep(1400,.06,'square',.08);beep(700,.08,'triangle',.08)}
+    if(state==='pop'&&(now-popT)/1000>win){state='idle';wf.style.transform='translateY(60px) rotate(120deg)';beep(1800,.15,'square',.06,-1400);toast('💥 CLATTER! It hit the floor');
+      if(snackFail(20,'🧇','CLATTER!','Waffle hit the floor. Everyone heard.'))return;setTimeout(()=>{wf.style.transform='translateY(0)';btn.textContent='PUSH DOWN ⬇️'},600)}
+    $('mNoise').textContent=Math.round(noise)+'%';miniRaf=requestAnimationFrame(loop)};
+  wf.style.transform='translateY(0)';miniRaf=requestAnimationFrame(loop);
+  btn.onpointerdown=e=>{e.preventDefault();
+    if(state==='idle'){state='toast';popAt=performance.now()+1500+Math.random()*3000;wf.style.transform='translateY(20px)';btn.textContent='...waiting...';beep(300,.05,'triangle',.05)}
+    else if(state==='toast'){toast('🤫 Not yet... wait for it')}
+    else if(state==='pop'){state='idle';got++;beep(660,.08);setTimeout(()=>beep(990,.1),80);$('wScore').textContent='🧇 '+got+'/2';wf.style.transform='translateY(0)';
+      if(got>=2)return snackDone('🧇','😋 *crunch* Now get back to bed!');btn.textContent='PUSH DOWN ⬇️'}};
+}
+function iceGame(){
+  let scoops=0,prog=0;const per=has('master')?11:8;
+  openMini(`<h2>🍨 Rock-Hard Ice Cream</h2><p>It's frozen solid. <b>MASH</b> the button to scoop!<br>Each scrape makes a little noise.</p>
+    <div style="font-size:60px" id="bowlI">🥣</div><div id="barBox" style="height:22px"><div id="iceFill" style="height:100%;width:0;background:#ffafcc"></div></div>
+    <p id="iScore" style="font-size:20px;font-weight:800">🍨 0/3 scoops</p><p style="font-size:13px">😴 ${P()} <span id="mNoise"></span></p><button id="iBtn">SCOOP! 🥄</button>`);
+  let last=performance.now();
+  const loop=now=>{const dt=(now-last)/1000;last=now;prog=Math.max(0,prog-14*dt);$('iceFill').style.width=prog+'%';$('mNoise').textContent=Math.round(noise)+'%';miniRaf=requestAnimationFrame(loop)};
+  miniRaf=requestAnimationFrame(loop);
+  $('iBtn').onpointerdown=e=>{e.preventDefault();prog+=per;beep(2200+Math.random()*600,.02,'square',.015);
+    if(N.mom){noise+=.7;maxNoise=Math.max(maxNoise,noise);if(noise>=100){cancelAnimationFrame(miniRaf);closeMini();return lose('🥄','SCRAPE SCRAPE','All that scraping woke up the whole house.')}}
+    if(prog>=100){prog=0;scoops++;beep(660,.08);$('iScore').textContent='🍨 '+scoops+'/3 scoops';$('bowlI').textContent=['🥣','🍨','🍨🍨','🍨🍨🍨'][scoops];
+      if(scoops>=3)snackDone('🍨','😋 Brain freeze! Now get back to bed!')}};
+}
+function snackGame(){
+  setPhase('snack');
+  if(N.snack==='popcorn')return popcornGame();
+  if(N.snack==='cereal')return cerealGame();
+  if(N.snack==='waffle')return waffleGame();
+  if(N.snack==='icecream')return iceGame();
+  sandwichGame();
+}
+function sandwichGame(){
+  const LAYERS=['🍞','🧀','🥓','🥬','🍅','🍞'];let got=0,pos=0,dir=1,gw=26,gx=0;
+  openMini(`<h2>🥪 Midnight Sandwich</h2><p>Tap <b>GRAB</b> when the needle is in the green. Missing = LOUD clatter.</p>
+    <div id="stack"></div><div id="barBox"><div id="green"></div><div id="needle"></div></div>
+    <p style="font-size:13px">😴 ${P()} <span id="mNoise"></span></p><button id="grab">GRAB 🖐️</button>`);
+  const newZone=()=>{gw=Math.max(20,34-got*2.5)+(has('master')?10:0);gx=Math.random()*(100-gw);$('green').style.left=gx+'%';$('green').style.width=gw+'%'};newZone();
+  const spd=28+Math.min(night,10)*4;let last=performance.now();
+  const loop=now=>{const dt=(now-last)/1000;last=now;pos+=dir*spd*dt*(1+got*.08);if(pos>100){pos=100;dir=-1}if(pos<0){pos=0;dir=1}
+    $('needle').style.left='calc('+pos+'% - 3px)';$('mNoise').textContent=Math.round(noise)+'%';miniRaf=requestAnimationFrame(loop)};
+  miniRaf=requestAnimationFrame(loop);
+  $('grab').onpointerdown=e=>{e.preventDefault();
+    if(pos>=gx&&pos<=gx+gw){$('stack').textContent+=LAYERS[got];got++;beep(600+got*80,.08);
+      if(got>=LAYERS.length){$('stack').textContent='🥪';return snackDone('🥪','😋 *om nom nom* Now get back to bed!')}
+      newZone();}
+    else{beep(1800,.15,'square',.06,-1400);beep(400,.25,'sawtooth',.05);snackFail(24,'🍳','CLANG!','You dropped a pan. The whole house is awake.')}
+  };
+}
+function popcornGame(){
+  const hi=has('master')?4:3;
+  openMini(`<h2>🍿 Microwave Popcorn</h2><p>Hit <b>STOP</b> at <b>0:01–0:0${hi}</b>.<br>If it hits 0:00 it goes <b>BEEP BEEP BEEP</b>!</p>
+    <div class="micro"><div id="mDisp">0:15</div></div><div id="popE" style="font-size:30px;min-height:44px;margin-top:8px"></div>
+    <p style="font-size:13px">😴 ${P()} <span id="mNoise"></span></p><button id="stop">STOP ✋</button>`);
+  let t=15,acc=0,last=performance.now();const rate=Math.max(.2,.34-night*.01);
+  const loop=now=>{const dt=(now-last)/1000;last=now;acc+=dt;
+    if(acc>=rate){acc=0;t--;$('mDisp').textContent='0:'+String(Math.max(0,t)).padStart(2,'0');
+      if(t<10&&t>0){$('popE').textContent+='🍿';beep(1500+Math.random()*800,.02,'square',.03)}
+      if(t<=0){beep(2000,.12,'square',.09);setTimeout(()=>beep(2000,.12,'square',.09),200);setTimeout(()=>beep(2000,.12,'square',.09),400);
+        if(snackFail(30,'🍿','BEEP BEEP BEEP!','The microwave went off at full volume. Busted.'))return;
+        toast('🔊 BEEP BEEP BEEP!! Try again');t=15;$('popE').textContent='';}}
+    $('mNoise').textContent=Math.round(noise)+'%';miniRaf=requestAnimationFrame(loop)};
+  miniRaf=requestAnimationFrame(loop);
+  $('stop').onpointerdown=e=>{e.preventDefault();
+    if(t>=1&&t<=hi){$('popE').textContent='🍿🍿🍿🍿🍿';snackDone('🍿','😋 *crunch crunch* Now get back to bed!')}
+    else if(t>hi){beep(200,.1,'triangle',.06);toast('😐 Half the kernels didn\'t pop. Restarting...');t=15;$('popE').textContent=''}};
+}
+function cerealGame(){
+  const lo=has('master')?62:68,hi=has('master')?92:86;let step=0,fill=0,hold=false;
+  const STEPS=[['🥣','Pour the cereal','#d4a24c'],['🥛','Pour the milk','#f0f0f0']];
+  openMini(`<h2>🥣 Midnight Cereal</h2><p>HOLD to pour. Let go in the <b>green zone</b>.<br>Overflow = SPILL (loud)!</p>
+    <div class="bowl"><div id="band" style="bottom:${lo}%;height:${hi-lo}%"></div><div id="fill"></div></div>
+    <p id="cStep" style="font-size:20px;font-weight:800"></p><p style="font-size:13px">😴 ${P()} <span id="mNoise"></span></p><button id="pour">HOLD TO POUR</button>`);
+  const setStep=()=>{$('cStep').textContent=STEPS[step][0]+' '+STEPS[step][1];$('fill').style.background=STEPS[step][2];fill=0};setStep();
+  const spd=38+Math.min(night,10)*3;let last=performance.now();
+  const loop=now=>{const dt=(now-last)/1000;last=now;
+    if(hold){fill+=spd*dt*(.8+Math.random()*.5);if(Math.random()<dt*15)beep(step?300:900+Math.random()*400,.02,'triangle',.02);
+      if(fill>100){hold=false;beep(150,.3,'sawtooth',.06,-60);toast('💦 SPILLED! Clean... ish. Try again');fill=0;
+        if(snackFail(18,'🥣','SPLASH!','You flooded the counter. '+P()+' stepped in it.'))return}}
+    $('fill').style.height=Math.min(100,fill)+'%';$('mNoise').textContent=Math.round(noise)+'%';miniRaf=requestAnimationFrame(loop)};
+  miniRaf=requestAnimationFrame(loop);
+  const b=$('pour');
+  b.onpointerdown=e=>{e.preventDefault();hold=true};
+  const rel=()=>{if(!hold)return;hold=false;
+    if(fill>=lo&&fill<=hi){beep(660,.08);step++;if(step>=STEPS.length){$('cStep').textContent='🥣 Perfect bowl!';return snackDone('🥣','😋 *slurp* Now get back to bed!')}setStep()}};
+  b.onpointerup=rel;b.onpointerleave=rel;b.onpointercancel=rel;
+}
+
+// ---------- END ----------
+function win(){
+  phase='end';const left=(N.end-gameMin)/60;const stars=N.mom?(maxNoise<45?3:maxNoise<75?2:1):(left>.5?3:left>.25?2:1);const bonus=quest&&quest.stage===2?1:0;
+  save.stars+=stars+bonus;if(night>save.best)save.best=night;persist();
+  [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'square',.06),i*110));
+  const lines=['Perfect crime. Nobody will ever know.','There are crumbs in your bed. Worth it.','Best. Extra. Hour. Ever.'];
+  end('😴','Night '+night+' survived!','⭐'.repeat(stars)+'<span style="opacity:.25">'+'⭐'.repeat(3-stars)+'</span>',
+    `Back in bed at <b>${fmt(gameMin)}</b>. ${N.mom?'Loudest noise: '+Math.round(maxNoise)+'%':'Dad never even rolled over 😴'}<br>${bonus?'Side quest bonus: +1⭐<br>':''}${lines[stars-1]}<br><b>You have ⭐ ${save.stars} to spend</b>`,'NEXT NIGHT',()=>{night++;startNight()});
+}
+function lose(em,t,txt){
+  phase='end';cancelAnimationFrame(miniRaf);closeMini();seqTO.forEach(clearTimeout);beep(200,.6,'sawtooth',.08,-150);
+  end(em,t,'',txt,'TRY AGAIN',()=>{$('endScreen').classList.add('hidden');$('hud').classList.remove('hidden');startSneak()});
+}
+function end(em,t,stars,txt,btn,fn){
+  $('hud').classList.add('hidden');
+  $('endEmoji').textContent=em;$('endTitle').textContent=t;$('endStars').innerHTML=stars;$('endText').innerHTML=txt;
+  const b=$('endBtn');b.textContent=btn;b.onclick=fn;$('endScreen').classList.remove('hidden');
+}
+
+// ---------- SHOP ----------
+const SHOP=[
+ {k:'socks',ic:'🧦',n:'Fuzzy Socks',d:'Running & creaky boards are 40% quieter',p:6},
+ {k:'flash',ic:'🔦',n:'Mega Flashlight',d:'See way farther in the dark',p:5},
+ {k:'master',ic:'🥄',n:'Snack Master',d:'All snack mini-games get easier',p:5},
+ {k:'dino',ic:'🦖',n:'Dino Pajamas',d:'Rawr (quietly)',p:3,skin:1},
+ {k:'ghost',ic:'👻',n:'Ghost Costume',d:'Spooky sneaking',p:3,skin:1},
+ {k:'robot',ic:'🤖',n:'Robot Onesie',d:'Beep boop',p:4,skin:1},
+ {k:'astro',ic:'🧑‍🚀',n:'Astronaut PJs',d:'One small step for snacks',p:4,skin:1}];
+function openShop(){
+  const sh=$('shop');
+  const render=()=>{
+    sh.innerHTML=`<h2>🛍️ Pajama Shop</h2><p style="font-size:20px;font-weight:800">⭐ ${save.stars}</p><div class="shopList">`+
+      `<div class="item"><span class="ic">🧒</span><div><b>Regular PJs</b><br><small>Classic</small></div><button data-k="none" class="sbtn">${save.skin==='🧒'?'WEARING':'WEAR'}</button></div>`+
+      SHOP.map(it=>{const own=has(it.k);let lbl=own?(it.skin?(save.skin===it.ic?'WEARING':'WEAR'):'OWNED'):'⭐ '+it.p;
+        return `<div class="item"><span class="ic">${it.ic}</span><div><b>${it.n}</b><br><small>${it.d}</small></div><button data-k="${it.k}" class="sbtn" ${!own&&save.stars<it.p?'style="opacity:.4"':''}>${lbl}</button></div>`}).join('')+
+      `</div><button id="shopClose">BACK</button>`;
+    sh.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{const k=b.dataset.k;
+      if(k==='none'){save.skin='🧒'}
+      else{const it=SHOP.find(x=>x.k===k);
+        if(!has(k)){if(save.stars<it.p){toast('Not enough ⭐ yet');return}save.stars-=it.p;save.owned.push(k);beep(784,.1);setTimeout(()=>beep(1046,.15),90);if(it.skin)save.skin=it.ic}
+        else if(it.skin)save.skin=it.ic}
+      persist();render();showBest()});
+    $('shopClose').onclick=()=>{sh.classList.add('hidden');showBest()};
+  };
+  render();sh.classList.remove('hidden');
+}
+
+// ---------- DRAW ----------
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function emo(e,x,y,sz){cx.font=`${T*sz}px system-ui`;cx.fillText(e,x,y)}
+function draw(t){
+  cx.fillStyle='#05060f';cx.fillRect(0,0,W,H);
+  if(!player)return;
+  let camX=player.x*T-W/2,camY=player.y*T-H/2+40;
+  if(MW*T<W)camX=(MW*T-W)/2;else camX=Math.max(-T,Math.min(MW*T-W+T,camX));
+  camY=Math.max(-T*3,Math.min(MH*T-H+T,camY));
+  if(shake){camX+=(Math.random()-.5)*14*shake;camY+=(Math.random()-.5)*14*shake}
+  cx.save();cx.translate(-camX,-camY);
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const ch=MAP[y][x];
+    if(ch==='#'){cx.fillStyle='#2b2140';cx.fillRect(x*T,y*T,T,T);cx.fillStyle='#3d2f5c';cx.fillRect(x*T,y*T,T,T*.35)}
+    else{cx.fillStyle=FLOOR[ch];cx.fillRect(x*T,y*T,T,T);cx.fillStyle='rgba(0,0,0,.08)';if((x+y)%2)cx.fillRect(x*T,y*T,T,T)}}
+  for(const c of creaks){cx.strokeStyle=c.hit?'#ff4d6d':'rgba(40,20,10,.75)';cx.lineWidth=2;
+    for(let i=1;i<4;i++){cx.beginPath();cx.moveTo(c.x*T+4,c.y*T+i*T/4+Math.sin(i)*2);cx.lineTo(c.x*T+T-4,c.y*T+i*T/4-Math.sin(i)*2);cx.stroke()}
+    cx.fillStyle='rgba(255,180,120,.12)';cx.fillRect(c.x*T,c.y*T,T,T)}
+  cx.textAlign='center';cx.textBaseline='middle';
+  cx.font=`700 ${T*.26}px system-ui`;cx.fillStyle='rgba(255,255,255,.28)';
+  L.labels.forEach(([k,x,y])=>cx.fillText(ROOMNAME[k],x*T,y*T));
+  if(L.extraText){cx.font=`700 ${T*.2}px system-ui`;L.extraText.forEach(([tx,x,y])=>cx.fillText(tx,x*T,y*T))}
+  if(L.outside){// crosswalk + stairs + signs
+    cx.fillStyle='rgba(255,255,255,.55)';for(let y=L.road.top+.15;y<L.road.bot;y+=.5)cx.fillRect(L.cross.x*T,y*T,L.cross.w*T,.25*T);
+    cx.fillStyle='rgba(255,210,80,.5)';for(let x=1;x<MW-1;x+=1.2)cx.fillRect(x*T,(L.road.top+1.45)*T,.6*T,.1*T);
+    if(L.name==='aptout'){cx.strokeStyle='rgba(0,0,0,.35)';cx.lineWidth=2;for(let y=3.1;y<6;y+=.3){cx.beginPath();cx.moveTo(11*T,y*T);cx.lineTo(13*T,y*T);cx.stroke()}}
+    cx.font=`900 ${T*.3}px system-ui`;cx.fillStyle='#ff4d6d';cx.fillText('BODEGA 24/7 🏪',L.shopSign.x*T,L.shopSign.y*T);
+    emo(L.name==='aptout'?'🚪':'🏠',L.homeDraw.x*T,L.homeDraw.y*T,.55)}
+  if(!L.outside&&L.doorDraw)emo('🚪',L.doorDraw.x*T,L.doorDraw.y*T,.5);
+  cx.fillStyle='#fff';
+  for(const d of DECOR){cx.fillStyle=d.c;rr(d.x*T,d.y*T,d.w*T,d.h*T,T*.15);cx.fill();if(d.t)emo(d.t,(d.x+d.w/2)*T,(d.y+d.h/2)*T,.7)}
+  // cookie jar + charger
+  if(!L.outside){emo('🫙',L.jar.x*T,L.jar.y*T,.4);emo('🔌',L.q.drop.x*T,(L.q.drop.y+.3)*T,.35);
+  // TV
+  const tvOn=phase==='tv'||phase==='tvgame'||(sneaking()&&tvOnNight);
+  cx.fillStyle=tvOn?`hsl(${(t*90)%360},70%,60%)`:'#111';rr(L.tvr.x*T,L.tvr.y*T,2.7*T,.45*T,4);cx.fill();}
+  if(sneaking()&&tvOnNight){cx.font=`800 ${T*.24}px system-ui`;cx.fillStyle=Math.floor(t*3)%2?'#ffd166':'#ff4d6d';cx.fillText('TURN OFF!',ZONES.tv.x*T,L.tvText*T);cx.fillStyle='#fff'}
+  if(sneaking()&&!L.outside){for(const lg of legos)if(!lg.hit)emo('🧱',lg.x*T,lg.y*T,.28);
+    if(candies)for(const c of candies)if(!c.got){emo('🍬',c.x*T,c.y*T+Math.sin(t*3+c.x)*2,.38)}}
+  // hide spots
+  if(sneaking()){for(const h of HIDES){if(mom){const pr=(Math.sin(t*6)+1)/2;cx.strokeStyle='#9bf6ff';cx.lineWidth=3;cx.beginPath();cx.arc(h.x*T,h.y*T,T*(.45+pr*.15),0,6.28);cx.stroke()}
+    cx.globalAlpha=mom?1:.55;emo('🫥',h.x*T,h.y*T,.4);cx.globalAlpha=1}}
+  // quest marker
+  if(sneaking()&&!L.outside&&quest&&quest.stage<2){const q=QUESTS[quest.k],tg=quest.stage===0?q.pick:q.drop,pr=(Math.sin(t*4)+1)/2;
+    cx.strokeStyle='#ffd166';cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(tg.x*T,tg.y*T,T*(.4+pr*.1),0,6.28);cx.stroke();cx.setLineDash([]);
+    emo(quest.stage===0?q.icon:'🔌',tg.x*T,tg.y*T,.42);emo('⭐',tg.x*T+T*.35,tg.y*T-T*.35,.25)}
+  // target marker
+  const zk=targetKey(),z=ZONES[zk];
+  if(z){const pr=(Math.sin(t*5)+1)/2;cx.strokeStyle='#ffd166';cx.lineWidth=3;cx.beginPath();cx.arc(z.x*T,z.y*T,T*(.5+pr*.3),0,6.28);cx.stroke();
+    emo({tv:'📺',bed:'🛏️',fridge:SNACK_IC[N.snack]||'🍪',bro:'👀',door:'🚪',shop:'🏪',home:'🏠'}[zk],z.x*T,z.y*T-T*(.9+pr*.15),.5)}
+  if(sneaking()&&!L.outside&&!hasStreamix){const pr=(Math.sin(t*4)+1)/2;cx.strokeStyle='#e50914';cx.lineWidth=3;cx.beginPath();cx.arc(ZONES.pc.x*T,ZONES.pc.y*T,T*(.4+pr*.2),0,6.28);cx.stroke();
+    cx.font=`800 ${T*.22}px system-ui`;cx.fillStyle='#ff4d5a';cx.fillText('STREAMIX?',ZONES.pc.x*T,ZONES.pc.y*T+T*.75);cx.fillStyle='#fff'}
+  const shadow=(x,y)=>{cx.fillStyle='rgba(0,0,0,.3)';cx.beginPath();cx.ellipse(x,y+T*.32,T*.3,T*.1,0,0,6.28);cx.fill()};
+  // dog
+  if(dog&&sneaking()&&!L.outside){const px=dog.x*T,py=dog.y*T;shadow(px,py);cx.save();cx.translate(px,py+Math.abs(Math.sin(t*10))*-2);cx.scale(-dog.face,1);emo('🐕',0,0,.6);cx.restore();
+    if(dog.woof>0){cx.font=`900 ${T*.3}px system-ui`;cx.fillStyle='#ffd166';cx.fillText('WOOF!',px,py-T*.6-dog.woof*8);cx.fillStyle='#fff'}}
+  // dad
+  for(const c of cars){cx.save();cx.translate(c.x*T,c.y*T);cx.fillStyle='rgba(255,240,170,.18)';cx.beginPath();cx.ellipse(c.dir*T*1.3,0,T*.9,T*.35,0,0,6.28);cx.fill();cx.fillStyle=c.col;rr(-.8*T,-.38*T,1.6*T,.76*T,T*.2);cx.fill();cx.fillStyle='#bfe3ff';rr(-.25*T,-.3*T,.5*T,.6*T,4);cx.fill();cx.fillStyle='#fff6b0';cx.fillRect((c.dir>0?.7:-.8)*T,-.32*T,.1*T,.18*T);cx.fillRect((c.dir>0?.7:-.8)*T,.14*T,.1*T,.18*T);cx.restore()}
+  if(dad&&sneaking()&&!L.outside){const px=dad.x*T,py=dad.y*T;shadow(px,py);
+    if(dad.follow){cx.fillStyle='rgba(255,140,60,.13)';cx.beginPath();cx.arc(px,py,T*2,0,6.28);cx.fill()}
+    cx.save();cx.translate(px,py+Math.sin(t*4)*2);cx.rotate(Math.sin(t*2)*.12);cx.scale(dad.face||1,1);emo('🧟‍♂️',0,0,.85);cx.restore();
+    emo(dad.follow?(dad.notice>0?'❓':'❗'):'💤',px+T*.35,py-T*.55+Math.sin(t*3)*3,.3)}
+  // mom
+  if(mom){const px=mom.x*T,py=mom.y*T;
+    cx.fillStyle='rgba(255,80,110,.12)';cx.beginPath();cx.arc(px,py,T*3.2,0,6.28);cx.fill();
+    shadow(px,py);emo('👩',px,py-Math.abs(Math.sin(t*8))*3,.85);emo('❓',px+T*.4,py-T*.6,.35)}
+  // player
+  {const px=player.x*T,py=player.y*T,bob=Math.abs(Math.sin(player.step))*(player.run?5:2);
+   shadow(px,py);if(player.hidden&&sneaking())cx.globalAlpha=.4;
+   cx.save();cx.translate(px,py-bob);cx.scale(save.skin==='🧑‍🚀'?1:player.face,1);emo(save.skin||'🧒',0,0,save.skin==='🧑‍🚀'?.72:.8);cx.restore();
+   if(sneaking())emo('🔦',px+player.face*T*.35,py+T*.1-bob,.3);
+   if(phase==='ret'&&brother.awake&&!brother.fed)emo(SNACK_IC[N.snack],px-player.face*T*.35,py+T*.05-bob,.3);
+   if(sneaking()&&errand&&errand.stage===2)emo(ITEM[N.snack].split(' ')[0],px-player.face*T*.35,py+T*.05-bob,.32);
+   if(sneaking()&&quest&&quest.stage===1)emo(QUESTS[quest.k].icon,px,py-T*.6-bob,.3);
+   cx.globalAlpha=1}
+  for(const p of parts){cx.globalAlpha=p.t/.6;cx.fillStyle=p.col;cx.fillRect(p.x*T-3,p.y*T-3,6,6)}cx.globalAlpha=1;
+  cx.restore();
+  // lighting
+  const lx=player.x*T-camX,ly=player.y*T-camY;
+  const nightDark=sneaking()||phase==='snack';
+  let dark=nightDark?.86:.35,rad=nightDark?4.5:7;
+  if(nightDark){if(has('flash'))rad+=1.8;if(N.ev==='power'&&!L.outside){rad*=.62;dark=.96}if(L.outside){dark=.55;rad=7}}
+  const gr=cx.createRadialGradient(lx,ly,T*1.1,lx,ly,T*rad);
+  gr.addColorStop(0,'rgba(5,6,20,0)');gr.addColorStop(1,`rgba(5,6,20,${dark})`);
+  cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+  if(storm&&sneaking()&&!L.outside){cx.strokeStyle='rgba(160,190,255,.25)';cx.lineWidth=1;for(let i=0;i<60;i++){const rx=(i*97+t*700)%W,ry=(i*53+t*900)%H;cx.beginPath();cx.moveTo(rx,ry);cx.lineTo(rx-4,ry+14);cx.stroke()}
+    if(storm.cover>0){cx.font='800 15px system-ui';cx.textAlign='center';cx.fillStyle='#9bf6ff';cx.fillText('⚡ THUNDER COVER: run! ('+storm.cover.toFixed(1)+'s)',W/2,H-170)}}
+  if(stun>0&&sneaking()){cx.font='900 22px system-ui';cx.textAlign='center';cx.fillStyle='#ffd166';cx.fillText('😖 OW OW OW',W/2,H/2-60)}
+  if(noise>60&&sneaking()){cx.fillStyle=`rgba(239,71,111,${(noise-60)/40*.25*(0.6+0.4*Math.sin(t*10))})`;cx.fillRect(0,0,W,H)}
+  // arrow to target
+  if(z){const sx=z.x*T-camX,sy=z.y*T-camY;
+    if(!(sx>20&&sx<W-20&&sy>150&&sy<H-20)){
+      const a=Math.atan2(sy-H/2,sx-W/2),m=Math.min((W/2-28)/Math.abs(Math.cos(a)||1e-6),(H/2-110)/Math.abs(Math.sin(a)||1e-6));
+      cx.save();cx.translate(W/2+Math.cos(a)*m,H/2+Math.sin(a)*m+40);cx.rotate(a);cx.fillStyle='#ffd166';cx.beginPath();cx.moveTo(16,0);cx.lineTo(-9,-11);cx.lineTo(-9,11);cx.fill();cx.restore()}}
+  cx.textAlign='center';cx.textBaseline='middle';
+  if(dad&&dad.follow&&!mom&&sneaking()){cx.font='800 15px system-ui';cx.fillStyle='#ffb36b';cx.fillText('🧟 DAD IS FOLLOWING YOU!',W/2,H-140)}
+  if(mom&&sneaking()){cx.font='800 15px system-ui';cx.fillStyle=player.hidden?'#9bf6ff':'#ff8fab';cx.fillText(player.hidden?'🫥 Hidden... stay still':'👩 MOM IS OUT! HIDE!',W/2,H-140)}
+  // joystick
+  if(joy&&walking()){cx.lineWidth=3;cx.strokeStyle='rgba(255,255,255,.3)';cx.beginPath();cx.arc(joy.ox,joy.oy,JR,0,6.28);cx.stroke();
+    cx.fillStyle='rgba(6,214,160,.15)';cx.beginPath();cx.arc(joy.ox,joy.oy,JR*.75,0,6.28);cx.fill();
+    const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.min(JR,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);
+    cx.fillStyle=d>JR*.75?'rgba(239,71,111,.7)':'rgba(255,255,255,.5)';cx.beginPath();cx.arc(joy.ox+Math.cos(a)*d,joy.oy+Math.sin(a)*d,22,0,6.28);cx.fill();
+    if(sneaking()){cx.font='700 12px system-ui';cx.fillStyle='#fff';cx.fillText(d>JR*.75?'RUNNING (LOUD)':'tiptoe',joy.ox,joy.oy+JR+16)}}
+}
+
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw(now/1000);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+$('play').onclick=()=>{beep(440,.05);night=1;startNight()};
+$('cont').onclick=()=>{beep(440,.05);night=save.reached||save.best||1;startNight()};showBest();
+$('titleShop').onclick=openShop;$('endShop').onclick=openShop;
+</script>
+</body>
+</html>

@@ -87,9 +87,13 @@ h2{font-size:clamp(32px,4.4vw,48px);font-weight:800;letter-spacing:-.035em;line-
 .card h4{font-size:18px;font-weight:700;letter-spacing:-.02em}
 .tag{font-size:12px;font-weight:600;color:var(--sub);background:var(--bg2);padding:4px 10px;border-radius:999px;white-space:nowrap}
 .card p{font-size:14px;color:var(--sub)}
-.card .more{margin-top:auto;padding-top:12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.actions{margin-top:auto;padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+.card .more{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0}
+.card .open{cursor:pointer}
+.play{font-size:14px;font-weight:600;height:34px;padding:0 18px;border-radius:999px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;transition:background .15s}
+.play:hover{background:#2a2a2a}
 .card .more svg{width:14px;height:14px;transition:transform .15s}
-.card:hover .more svg{transform:translateX(3px)}
+.card .more:hover svg{transform:translateX(3px)}
 
 /* COMING SOON */
 .soon{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
@@ -308,12 +312,12 @@ golf:()=>`<svg ${W}><rect width="320" height="200" fill="#e0f2fe"/><path d="M0 1
 
 /* ---------- DATA ---------- */
 const projects=[
- {id:'tower',name:'Tower Brawl',type:'Game',genre:'Strategy',desc:'Capture towers, send your troops and take over the whole map before the other side does.',year:'2026'},
- {id:'target',name:'Target Blast',type:'Game',genre:'Arcade',desc:'A carnival shooting gallery. Hit the targets, rack up points and beat your high score.',year:'2026'},
- {id:'clock',name:'Fall Back!',type:'Game',genre:'Arcade',desc:'It is daylight savings night and the clocks go back. Sneak a midnight snack without getting caught.',year:'2026'},
- {id:'test',name:'Test Zone',type:'App',genre:'Just for fun',desc:'Hearing test, IQ test, eye test and color blind test. All for fun, all in one place.',year:'2026'},
+ {id:'tower',name:'Tower Brawl',type:'Game',genre:'Strategy',desc:'Capture towers, send your troops and take over the whole map before the other side does.',year:'2026',play:'/tower-brawl/'},
+ {id:'target',name:'Target Blast',type:'Game',genre:'Arcade',desc:'A carnival shooting gallery. Hit the targets, rack up points and beat your high score.',year:'2026',play:'/target-blast/'},
+ {id:'clock',name:'Fall Back!',type:'Game',genre:'Arcade',desc:'It is daylight savings night and the clocks go back. Sneak a midnight snack without getting caught.',year:'2026',play:'/fall-back/'},
+ {id:'test',name:'Test Zone',type:'App',genre:'Just for fun',desc:'Hearing test, IQ test, eye test and color blind test. All for fun, all in one place.',year:'2026',play:'/test-zone/'},
  {id:'bot',name:'Homework Bot',type:'App',genre:'Tool',desc:'Snap a photo of your homework and get it checked and fixed in seconds. Works with your camera or your photo library.',year:'2026'},
- {id:'ads',name:'AdCrate',type:'App',genre:'Tool',desc:'Design your own ads, like the big ad networks do, with pretend money.',year:'2026'}
+ {id:'ads',name:'AdCrate',type:'App',genre:'Tool',desc:'Design your own ads, like the big ad networks do, with pretend money.',year:'2026',play:'/adcrate/'}
 ];
 
 /* ---------- RENDER ---------- */
@@ -325,14 +329,14 @@ const arrow='<svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" stroke="curr
 function render(){
   T.innerHTML=tabs.map(t=>`<button class="${t===cur?'on':''}" data-t="${t}">${tabNames[t]}</button>`).join('');
   G.innerHTML=projects.filter(p=>cur==='All'||p.type===cur).map(p=>`
-    <button class="card" data-id="${p.id}">
-      <div class="thumb">${art[p.id]()}</div>
+    <div class="card" data-id="${p.id}">
+      <div class="thumb open">${art[p.id]()}</div>
       <div class="cbody">
         <div class="ctop"><h4>${p.name}</h4><span class="tag">${p.genre}</span></div>
         <p>${p.desc}</p>
-        <span class="more">Learn more ${arrow}</span>
+        <div class="actions"><button class="more open">Learn more ${arrow}</button>${p.play?`<a class="play" href="${p.play}">Play</a>`:''}</div>
       </div>
-    </button>`).join('');
+    </div>`).join('');
 }
 T.onclick=e=>{const t=e.target.closest('button');if(t){cur=t.dataset.t;render()}};
 render();
@@ -344,7 +348,7 @@ count(document.getElementById('f-projects'),projects.length+1);
 /* modal */
 const M=document.getElementById('modal');
 G.addEventListener('click',e=>{
-  const c=e.target.closest('.card');if(!c)return;
+  if(!e.target.closest('.open'))return;const c=e.target.closest('.card');
   const p=projects.find(x=>x.id===c.dataset.id);
   document.getElementById('m-thumb').innerHTML=art[p.id]();
   document.getElementById('m-type').textContent=p.type;

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdCrate</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;font-family:system-ui,sans-serif;background:#f4f5f9;color:#1d1d29}
+header{background:#1d1d29;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header b{font-size:20px}header span{font-size:14px;background:#2ecc71;color:#000;padding:4px 10px;border-radius:20px;font-weight:800}
+nav{display:flex;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:52px;z-index:5}
+nav button{flex:1;border:0;background:none;padding:14px 1px;font-size:12px;white-space:nowrap;font-weight:700;color:#777;border-bottom:3px solid transparent}
+nav button.on{color:#6c5ce7;border-color:#6c5ce7}
+main{padding:16px;max-width:560px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+label{display:block;font-size:13px;font-weight:700;color:#555;margin:12px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;background:#fff}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.emo{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow-y:auto;padding:2px}.emo button{font-size:24px;border:2px solid #eee;background:#fff;border-radius:10px;padding:4px 8px}.emo button.on{border-color:#6c5ce7;background:#efeaff}
+.cols{display:flex;gap:8px;flex-wrap:wrap}.cols button{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #ccc}.cols button.on{box-shadow:0 0 0 3px #1d1d29}
+.btn{width:100%;border:0;border-radius:12px;padding:15px;font-size:18px;font-weight:800;color:#fff;background:#6c5ce7;margin-top:14px}
+.ban{background:#fff;color:#111;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:10px;position:relative;border:1px solid #ddd}
+.ban .e{font-size:30px}.ban b{font-size:14px}.ban div{font-size:12px;opacity:.75}
+.tag{position:absolute;top:3px;right:6px;font-size:10px;background:#f1c40f;color:#000;padding:1px 5px;border-radius:4px;font-weight:800}
+.phone{width:200px;height:360px;margin:12px auto 0;border-radius:26px;border:8px solid #1d1d29;overflow:hidden;position:relative;color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px}
+.phone .big{font-size:64px}.phone h3{margin:6px 0;font-size:18px}.phone p{font-size:12px;margin:4px 0}.phone .cta{background:#fff;color:#111;border-radius:10px;padding:8px 14px;font-weight:800;font-size:13px;margin-top:8px}
+.phone .sk{position:absolute;top:8px;right:8px;font-size:10px;background:rgba(0,0,0,.5);padding:3px 7px;border-radius:10px}
+.ad{display:flex;gap:12px;align-items:center}.ad .e{font-size:36px}.ad .info{flex:1;min-width:0}.ad b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:flex;gap:10px;font-size:12px;color:#666;margin-top:4px;flex-wrap:wrap}
+.tg{width:48px;height:28px;border-radius:14px;border:0;position:relative;background:#ccc}.tg::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}.tg.on{background:#2ecc71}.tg.on::after{left:23px}
+.del{border:0;background:none;font-size:20px}
+.money{font-size:44px;font-weight:900;color:#27ae60;margin:4px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .card{margin:0;text-align:center}.grid b{display:block;font-size:24px}.grid small{color:#777}
+.chart{display:flex;align-items:flex-end;gap:8px;height:150px;margin-top:10px}.chart div{flex:1;background:#6c5ce7;border-radius:6px 6px 0 0;position:relative}.chart div span{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:11px;color:#777}
+.how{display:flex;gap:10px;align-items:flex-start;background:#f4f5f9;border-radius:12px;padding:10px;margin-top:8px;font-size:14px;line-height:1.35}.how span{font-size:22px}
+.empty{text-align:center;color:#888;padding:30px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d1d29;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;display:none;z-index:9}
+.note{font-size:12px;color:#888;text-align:center;margin-top:10px}
+</style></head><body>
+<header id="hd"><b>📢 AdCrate <span id="bd" style="background:none;padding:0;font-size:20px"></span></b><span id="hm">$0.00</span></header>
+<nav><button class="on" onclick="tab('create',this)">➕ Ad</button><button onclick="tab('play',this)">🎮 Playable</button><button onclick="tab('ads',this)">📋 My Ads</button><button onclick="tab('earn',this)">💰 Earn</button><button onclick="tab('pay',this)">💳 Pay</button></nav>
+<main id="m"></main><div class="toast" id="toast"></div>
+<script>
+const EMO=["🎮", "🕹️", "👾", "🎯", "🎲", "🧩", "🥤", "🍕", "🍔", "🌮", "🍟", "🍩", "🍦", "🍪", "🍿", "🧃", "🍎", "🍌", "🐐", "🐱", "🐶", "🦆", "🐸", "🦖", "🐢", "🦄", "🐔", "🐟", "🦜", "🐼", "🚓", "🚗", "🚌", "✈️", "🚀", "🛹", "🚲", "🏎️", "🛒", "📦", "🎁", "💎", "💰", "🪙", "🔥", "⚡", "🌈", "⭐", "🧟", "👻", "💀", "🤖", "👽", "🧙", "🦸", "⚽", "🏀", "🏈", "⚾", "🎾", "🏌️", "🧦", "👟", "🧢", "🕶️", "🎩", "📱", "💻", "🎧", "📺", "🔋", "🧲", "🧪", "🔧", "🏰", "🏝️", "🌋", "🎈", "🎉", "🏆", "❤️", "💣"];
+const COL=['#6c5ce7','#e74c3c','#27ae60','#f39c12','#0984e3','#e84393','#2d3436','#00b894'];
+let S={ads:[],money:0,hist:[0,0,0,0,0,0,0]};try{S=JSON.parse(localStorage.adcrate)||S}catch(e){}
+S.ap=S.ap||0;S.owned=S.owned||[];S.theme=S.theme||'';
+const SHOP=[
+ {id:'b2',e:'🚀',n:'2x Money Boost',d:'all your ads earn double forever',p:500,k:'boost',m:2},
+ {id:'b5',e:'⚡',n:'5x Money Boost',d:'all your ads earn 5x forever',p:2500,k:'boost',m:5},
+ {id:'b20',e:'🌋',n:'20x Mega Boost',d:'all your ads earn 20x forever',p:15000,k:'boost',m:20},
+ {id:'tg',e:'🟡',n:'Gold Theme',d:'makes the app gold',p:1000,k:'theme',v:'linear-gradient(90deg,#b8860b,#f1c40f)'},
+ {id:'tr',e:'🌈',n:'Rainbow Theme',d:'makes the top bar rainbow',p:1500,k:'theme',v:'linear-gradient(90deg,#e74c3c,#f39c12,#f1c40f,#2ecc71,#3498db,#9b59b6)'},
+ {id:'tn',e:'🌌',n:'Galaxy Theme',d:'deep space vibes',p:1500,k:'theme',v:'linear-gradient(90deg,#0f0c29,#302b63,#24243e)'},
+ {id:'kc',e:'👑',n:'Crown Badge',d:'a crown next to your name',p:500,k:'badge'},
+ {id:'kd',e:'💎',n:'Diamond Badge',d:'very shiny. very rich.',p:5000,k:'badge'},
+ {id:'kb',e:'🏆',n:'Billionaire Badge',d:'proof you made a lot',p:1000,k:'badge'},
+ {id:'ic',e:'🏎️',n:'Sports Car',d:'imaginary. goes 0 to 60 in your head.',p:25000,k:'stuff'},
+ {id:'iy',e:'🛥️',n:'Yacht',d:'a boat for rich people',p:50000,k:'stuff'},
+ {id:'ii',e:'🏝️',n:'Private Island',d:'your own island. no wifi.',p:100000,k:'stuff'},
+ {id:'im',e:'🏰',n:'Mansion',d:'47 bathrooms',p:250000,k:'stuff'},
+ {id:'ir',e:'🚀',n:'Rocket Ship',d:'go to space. bring snacks.',p:500000,k:'stuff'},
+ {id:'io',e:'🌕',n:'The Moon',d:'you own the moon now',p:1000000,k:'stuff'}
+];
+function boost(){return SHOP.filter(i=>i.k=='boost'&&S.owned.includes(i.id)).reduce((m,i)=>m*i.m,1)}
+function fm(n){return n>=1e12?'$'+(n/1e12).toFixed(2)+'T':n>=1e9?'$'+(n/1e9).toFixed(2)+'B':n>=1e6?'$'+(n/1e6).toFixed(2)+'M':'$'+n.toFixed(2)}
+function applyLook(){const t=SHOP.find(i=>i.id==S.theme);document.getElementById('hd').style.background=t?t.v:'#1d1d29';document.getElementById('bd').textContent=SHOP.filter(i=>i.k=='badge'&&S.owned.includes(i.id)).map(i=>i.e).join('')}
+function convert(){const n=Math.floor(S.money/1000);if(n<1)return toast('you need $1,000 to get $1 Ad Pay');S.money-=n*1000;S.ap+=n;save();render();toast('💳 +$'+n+' Ad Pay!')}
+function buy(id){const it=SHOP.find(i=>i.id==id);if(S.owned.includes(id)){if(it.k=='theme'){S.theme=S.theme==id?'':id;save();render()}return}
+ if(S.ap<it.p)return toast('not enough Ad Pay 😢');S.ap-=it.p;S.owned.push(id);if(it.k=='theme')S.theme=id;save();render();toast(it.e+' bought '+it.n+'!')}
+function save(){try{localStorage.adcrate=JSON.stringify(S)}catch(e){}}
+let lastGain=0;let D={name:'',tag:'',emo:'🎮',col:'#6c5ce7',cta:'PLAY NOW',price:'',fmt:'both',bid:'0.05'},cur='create';
+const $=id=>document.getElementById(id),esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',1800)}
+function tab(t,b){cur=t;document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');render()}
+function preview(){const n=esc(D.name||'Your Ad Name'),t=esc(D.tag||'your catchy tagline goes here'),c=esc(D.cta||'GO');
+ return (D.fmt!='full'?'<label>Banner preview</label><div class="ban"><span class="tag">AD</span><span class="e">'+D.emo+'</span><span><b>'+n+'</b><div>'+t+'</div></span></div>':'')+
+ (D.fmt!='banner'?'<label>Full screen preview</label><div class="phone" style="background:radial-gradient(circle,'+D.col+',#000)"><span class="sk">skip in 5</span><div class="big">'+D.emo+'</div><h3>'+n+'</h3><p>'+t+'</p><div class="cta">'+c+' · '+pr()+'</div></div>':'')}
+function pr(){const p=parseFloat(D.price);return p>0?'$'+p.toFixed(2):'FREE'}
+function upd(k,v){D[k]=v;$('pv').innerHTML=preview()}
+const PMODES={tap:{n:'👆 Tap',d:'tap things before they vanish'},defend:{n:'🛡️ Defend',d:'tap enemies before they reach the left'},dodge:{n:'🏃 Dodge',d:'drag to dodge falling stuff'},catch:{n:'🧺 Catch',d:'drag to catch good stuff, avoid bad'}};
+let PD={name:'',mode:'catch',pl:'🛒',it:'🍎',bad:'💣',col:'#e67e22',tip:'catch the apples!',len:15,price:''},stopPrev=null;
+function runPlay(cv,P,onEnd){const cx=cv.getContext('2d'),dpr=devicePixelRatio||1,r=cv.getBoundingClientRect(),W=r.width,H=r.height;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+ let t=0,sc=0,hp=3,ob=[],plx=W/2,spT=0,lt=performance.now(),done=false,fx=[],started=false;const LEN=P.len,sz=Math.max(26,W/9);
+ const pos=e=>{const b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]};
+ const down=e=>{if(done)return;started=true;const [px,py]=pos(e);
+  if(P.mode=='tap'||P.mode=='defend'){for(let i=ob.length-1;i>=0;i--){const o=ob[i];if(Math.hypot(o.x-px,o.y-py)<sz*.8){ob.splice(i,1);sc+=10;fx.push({x:px,y:py,l:.5});break}}}else plx=Math.max(sz/2,Math.min(W-sz/2,px))};
+ const mv=e=>{if((P.mode=='dodge'||P.mode=='catch')&&(e.buttons||e.pointerType=='touch'))down(e)};
+ cv.onpointerdown=down;cv.onpointermove=mv;
+ function sp(){if(P.mode=='tap')ob.push({x:sz+Math.random()*(W-2*sz),y:sz*1.6+Math.random()*(H-sz*3.5),l:1.4,k:P.it});
+  else if(P.mode=='defend')ob.push({x:W+sz,y:sz*1.6+Math.random()*(H-sz*3.5),vx:-(W*.18+t*3),k:P.it});
+  else if(P.mode=='dodge')ob.push({x:sz/2+Math.random()*(W-sz),y:-sz,vy:H*.4+t*6,k:P.it});
+  else{const bad=Math.random()<.25;ob.push({x:sz/2+Math.random()*(W-sz),y:-sz,vy:H*.35+t*5,k:bad?P.bad:P.it,bad})}}
+ function fr(now){if(done)return;const dt=Math.min(.05,(now-lt)/1000);lt=now;if(started)t+=dt;
+  if(t>=LEN||hp<=0){done=true;cx.fillStyle='rgba(0,0,0,.55)';cx.fillRect(0,0,W,H);cx.fillStyle='#fff';cx.textAlign='center';cx.font='bold '+(W/9)+'px sans-serif';cx.fillText(hp<=0?'GAME OVER':'NICE!',W/2,H*.38);cx.font=(W/14)+'px sans-serif';cx.fillText('score: '+sc,W/2,H*.47);onEnd&&onEnd(sc);return}
+  if(started){spT-=dt;if(spT<=0){sp();spT=Math.max(.3,.85-t*.015)}}
+  ob.forEach(o=>{if(o.vx)o.x+=o.vx*dt;if(o.vy)o.y+=o.vy*dt;if(o.l!=null)o.l-=dt});
+  if(P.mode=='tap')ob=ob.filter(o=>o.l>0);
+  if(P.mode=='defend')ob=ob.filter(o=>{if(o.x<sz*.7){hp--;return false}return true});
+  if(P.mode=='dodge'||P.mode=='catch'){const py=H-sz*1.4;ob=ob.filter(o=>{if(Math.abs(o.x-plx)<sz*.75&&Math.abs(o.y-py)<sz*.7){if(P.mode=='dodge'||o.bad)hp--;else{sc+=10;fx.push({x:o.x,y:py-sz,l:.5})}return false}if(o.y>H+sz){if(P.mode=='dodge')sc+=5;return false}return true})}
+  fx.forEach(f=>{f.l-=dt;f.y-=40*dt});fx=fx.filter(f=>f.l>0);
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,P.col);g.addColorStop(1,'#111');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';
+  if(P.mode=='defend'){cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(0,0,sz*.7,H);cx.fillStyle='#fff'}
+  cx.font=sz+'px sans-serif';ob.forEach(o=>{cx.globalAlpha=o.l!=null?Math.min(1,o.l*3):1;cx.fillText(o.k,o.x,o.y)});cx.globalAlpha=1;
+  if(P.mode=='dodge'||P.mode=='catch'){cx.font=(sz*1.2)+'px sans-serif';cx.fillText(P.pl,plx,H-sz*1.4)}
+  cx.font='bold '+(sz*.45)+'px sans-serif';fx.forEach(f=>{cx.globalAlpha=f.l*2;cx.fillText('+10',f.x,f.y)});cx.globalAlpha=1;
+  cx.font='bold '+(W/18)+'px sans-serif';cx.fillText('⭐ '+sc+'   ⏱ '+Math.ceil(LEN-t)+'   '+'❤️'.repeat(Math.max(0,hp)),W/2,sz*.6);
+  if(!started){cx.fillStyle='rgba(0,0,0,.5)';cx.fillRect(0,H*.4,W,H*.2);cx.fillStyle='#fff';cx.font='bold '+(W/16)+'px sans-serif';cx.fillText('👆 '+(P.tip||'tap to start'),W/2,H*.47);cx.font=(W/22)+'px sans-serif';cx.fillText('tap to start',W/2,H*.54)}
+  requestAnimationFrame(fr)}
+ requestAnimationFrame(fr);return ()=>{done=true}}
+function pupd(k,v){PD[k]=v;restartPrev()}
+function restartPrev(){stopPrev&&stopPrev();const cv=document.getElementById('pcv');if(cv)stopPrev=runPlay(cv,PD)}
+function epick(k,list){return '<div class="emo" style="max-height:110px">'+list.map(e=>'<button class="'+(PD[k]==e?'on':'')+'" onclick="PD.'+k+'=\''+e+'\';render()">'+e+'</button>').join('')+'</div>'}
+function renderPlay(m){const show=PD.mode=='dodge'||PD.mode=='catch';
+ m.innerHTML='<div class="card"><h2 style="margin:0">🎮 Create a playable ad</h2><p class="note" style="text-align:left;margin:4px 0 0">people play a mini game inside your ad. playable ads get 2x views!</p>'+
+ '<label>Game name</label><input maxlength="24" placeholder="Aisle Nine Market" value="'+esc(PD.name)+'" oninput="PD.name=this.value">'+
+ '<label>Game type</label><div class="grid">'+Object.keys(PMODES).map(k=>'<button class="card" style="margin:0;border:2px solid '+(PD.mode==k?'#6c5ce7':'#eee')+';padding:10px" onclick="PD.mode=\''+k+'\';render()"><b style="font-size:16px">'+PMODES[k].n+'</b><small>'+PMODES[k].d+'</small></button>').join('')+'</div>'+
+ (show?'<label>Player</label>'+epick('pl',EMO):'')+
+ '<label>'+(PD.mode=='catch'?'Good thing (catch it)':PD.mode=='dodge'?'Thing to dodge':PD.mode=='defend'?'Enemy':'Thing to tap')+'</label>'+epick('it',EMO)+
+ (PD.mode=='catch'?'<label>Bad thing (avoid it)</label>'+epick('bad',EMO):'')+
+ '<label>Color</label><div class="cols">'+COL.map(c=>'<button class="'+(c==PD.col?'on':'')+'" style="background:'+c+'" onclick="PD.col=\''+c+'\';render()"></button>').join('')+'</div>'+
+ '<div class="row"><div><label>Tip text</label><input maxlength="30" value="'+esc(PD.tip)+'" oninput="pupd(\'tip\',this.value)"></div><div><label>Length</label><select onchange="pupd(\'len\',+this.value)">'+[10,15,30].map(v=>'<option value="'+v+'"'+(PD.len==v?' selected':'')+'>'+v+' sec</option>').join('')+'</select></div></div>'+
+ '<label>🏷️ Price (you earn this every click · empty = FREE)</label><div style="display:flex;align-items:center;gap:6px"><span style="font-size:22px;font-weight:800">$</span><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="'+esc(PD.price)+'" oninput="PD.price=this.value"></div>'+
+ '<label>Try it! (live preview)</label><div style="display:flex;justify-content:center"><canvas id="pcv" style="width:260px;height:440px;border-radius:24px;border:8px solid #1d1d29;touch-action:none;background:#111"></canvas></div><button class="btn" style="background:#2d3436;margin-top:8px" onclick="restartPrev()">🔄 Restart preview</button>'+
+ '<button class="btn" onclick="publishPlay()">🚀 PUBLISH PLAYABLE AD</button></div>';restartPrev()}
+function publishPlay(){if(!PD.name.trim())return toast('give your game a name first');const bid=Math.max(0,parseFloat(PD.price)||0);
+ S.ads.unshift({name:PD.name,tag:'🎮 playable ad · '+PMODES[PD.mode].n,emo:PD.mode=='tap'||PD.mode=='defend'?PD.it:PD.pl,col:PD.col,cta:'PLAY',price:PD.price,fmt:'playable',bid,imp:0,clk:0,earn:0,on:true,play:{...PD}});save();toast('🚀 playable ad published!');
+ stopPrev&&stopPrev();tab('ads',document.querySelectorAll('nav button')[2])}
+function playFull(i){const a=S.ads[i];if(!a.play)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:#000;z-index:20;display:flex;align-items:center;justify-content:center';
+ o.innerHTML='<canvas style="width:100%;height:100%;touch-action:none"></canvas><button style="position:absolute;top:14px;right:14px;border:0;border-radius:20px;padding:8px 14px;font-weight:800;background:rgba(255,255,255,.85)">✕ close</button>';
+ document.body.appendChild(o);const st=runPlay(o.querySelector('canvas'),a.play);o.querySelector('button').onclick=()=>{st();o.remove()}}
+
+function render(){const m=$('m');$('hm').textContent=fm(S.money);applyLook();if(cur!='play'&&stopPrev){stopPrev();stopPrev=null}
+ if(cur=='play')return renderPlay(m);
+ if(cur=='pay'){const n=Math.floor(S.money/1000);const mine=SHOP.filter(i=>S.owned.includes(i.id));
+  m.innerHTML='<div class="card" style="text-align:center;background:linear-gradient(135deg,#1d1d29,#6c5ce7);color:#fff"><small>💳 AD PAY BALANCE</small><div class="money" style="color:#fff">$'+S.ap.toLocaleString()+'</div><small>every $1,000 of ad money = $1 Ad Pay</small></div>'+
+  '<div class="card"><b>🔄 Convert</b><p style="margin:6px 0;color:#666;font-size:14px">you have '+fm(S.money)+' ad money → <b>$'+n.toLocaleString()+' Ad Pay</b></p><div style="background:#eee;border-radius:8px;height:12px;overflow:hidden"><div style="height:100%;background:#2ecc71;width:'+Math.min(100,(S.money%1000)/10)+'%"></div></div><small style="color:#888">'+(n?'ready!':fm(1000-S.money%1000)+' more to your next $1')+'</small><button class="btn" style="background:#2ecc71" onclick="convert()">💳 CONVERT TO AD PAY</button></div>'+
+  '<div class="card"><b>🛍️ Shop</b>'+SHOP.map(i=>{const own=S.owned.includes(i.id);const lbl=own?(i.k=='theme'?(S.theme==i.id?'USING':'USE'):'OWNED ✓'):'$'+i.p;
+   return '<div class="ad" style="margin-top:12px"><span class="e">'+i.e+'</span><div class="info"><b>'+i.n+'</b><small style="color:#888">'+i.d+'</small></div><button onclick="buy(\''+i.id+'\')" style="border:0;border-radius:10px;padding:10px 12px;font-weight:800;min-width:76px;color:#fff;background:'+(own?'#95a5a6':S.ap>=i.p?'#6c5ce7':'#ccc')+'">'+lbl+'</button></div>'}).join('')+'</div>'+
+  '<div class="card"><b>🎒 My Stuff</b><div style="font-size:34px;margin-top:8px">'+(mine.length?mine.map(i=>i.e).join(' '):'<span style="font-size:14px;color:#888">nothing yet. go shopping!</span>')+'</div>'+(boost()>1?'<p style="margin:8px 0 0;color:#6c5ce7;font-weight:800">🚀 your ads earn '+boost()+'x</p>':'')+'</div><p class="note">Ad Pay is imaginary too 😂</p>';return}
+ if(cur=='create'){m.innerHTML='<div class="card"><h2 style="margin:0">Create an ad</h2>'+
+  '<label>Ad name</label><input maxlength="24" placeholder="Mega Fizz Soda" value="'+esc(D.name)+'" oninput="upd(\'name\',this.value)">'+
+  '<label>Tagline</label><input maxlength="60" placeholder="now with 400% more fizz" value="'+esc(D.tag)+'" oninput="upd(\'tag\',this.value)">'+
+  '<label>Icon</label><div class="emo">'+EMO.map(e=>'<button class="'+(e==D.emo?'on':'')+'" onclick="D.emo=\''+e+'\';render()">'+e+'</button>').join('')+'</div>'+
+  '<label>Color</label><div class="cols">'+COL.map(c=>'<button class="'+(c==D.col?'on':'')+'" style="background:'+c+'" onclick="D.col=\''+c+'\';render()"></button>').join('')+'</div>'+
+  '<label>🏷️ Price (shows on the ad button · you earn this every click · empty = FREE)</label><div style="display:flex;align-items:center;gap:6px"><span style="font-size:22px;font-weight:800">$</span><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="'+esc(D.price)+'" oninput="upd(\'price\',this.value)"></div>'+
+  '<div class="row"><div><label>Button text</label><input maxlength="16" value="'+esc(D.cta)+'" oninput="upd(\'cta\',this.value)"></div>'+
+  '<div><label>Format</label><select onchange="upd(\'fmt\',this.value)"><option value="both"'+(D.fmt=='both'?' selected':'')+'>Banner + Full</option><option value="banner"'+(D.fmt=='banner'?' selected':'')+'>Banner only</option><option value="full"'+(D.fmt=='full'?' selected':'')+'>Full screen only</option></select></div></div>'+
+  
+  '<div id="pv">'+preview()+'</div><button class="btn" onclick="publish()">🚀 PUBLISH AD</button></div>'}
+ else if(cur=='ads'){m.innerHTML=S.ads.length?S.ads.map((a,i)=>{const ctr=a.imp?(a.clk/a.imp*100).toFixed(1):'0.0';
+  return '<div class="card ad"><span class="e">'+a.emo+'</span>'+(a.play?'<button onclick="playFull('+i+')" style="border:0;background:#6c5ce7;color:#fff;border-radius:8px;padding:6px 8px;font-weight:800">▶</button>':'')+'<div class="info"><b>'+esc(a.name)+'</b><small style="color:#888">'+esc(a.tag)+'</small><div class="stats"><span>👀 '+a.imp.toLocaleString()+'</span><span>👆 '+a.clk.toLocaleString()+'</span><span>📈 '+ctr+'%</span><span>💵 $'+a.earn.toFixed(2)+'</span></div></div><button class="tg '+(a.on?'on':'')+'" onclick="S.ads['+i+'].on=!S.ads['+i+'].on;save();render()"></button><button class="del" onclick="if(confirmDel('+i+'))0">🗑️</button></div>'}).join('')
+  :'<div class="empty">no ads yet 👀<br>go make one in ➕ Create</div>'}
+ else{const rate=lastGain;const imp=S.ads.reduce((s,a)=>s+a.imp,0),clk=S.ads.reduce((s,a)=>s+a.clk,0),mx=Math.max(.01,...S.hist),days=['6d','5d','4d','3d','2d','1d','today'];
+  m.innerHTML='<div class="card" style="text-align:center"><small style="color:#777">TOTAL IMAGINARY EARNINGS</small><div class="money">'+fm(S.money)+'</div><small style="color:#777">'+S.ads.filter(a=>a.on).length+' ads running</small></div>'+
+  '<div class="grid"><div class="card"><b>'+imp.toLocaleString()+'</b><small>👀 impressions</small></div><div class="card"><b>'+clk.toLocaleString()+'</b><small>👆 clicks</small></div><div class="card"><b>'+(imp?(clk/imp*100).toFixed(1):'0.0')+'%</b><small>📈 click rate</small></div><div class="card"><b>$'+(imp?(S.money/imp*1000).toFixed(2):'0.00')+'</b><small>💵 per 1000 views</small></div></div>'+
+  '<div class="card" style="margin-top:14px;padding-bottom:30px"><b>Last 7 days</b><div class="chart">'+S.hist.map((v,i)=>'<div style="height:'+Math.max(3,v/mx*100)+'%"><span>'+days[i]+'</span></div>').join('')+'</div></div>'+
+  '<div class="card"><b>💡 How the money rolls in</b>'+
+  '<div class="how"><span>⏱️</span><div>Every second, each ad that\'s switched <b style="display:inline;color:#2ecc71">ON</b> gets shown to imaginary people.</div></div>'+
+  '<div class="how"><span>👀</span><div>Each <b style="display:inline">view</b> pays you $0.0005 (half a tenth of a penny). Tiny, but it adds up.</div></div>'+
+  '<div class="how"><span>👆</span><div>Some people <b style="display:inline">click</b> your ad (about 3 out of 100). Each click pays you your ad\'s <b style="display:inline">price</b>. FREE ads only earn from views.</div></div>'+
+  '<div class="how"><span>📈</span><div>A higher price means your ad shows up more AND gets clicked more, so you earn way faster.</div></div>'+
+  '<div class="how"><span>📢</span><div>More ads switched on = more money. Switch one off and it stops earning.</div></div>'+
+  '<div class="how"><span>🏦</span><div>Once you have $1.00 or more you can cash out to your imaginary bank.</div></div>'+
+  '<div class="how" style="background:#efeaff"><span>⚡</span><div>Right now you\'re making about <b style="display:inline;color:#6c5ce7">$'+rate.toFixed(3)+'</b> per second.</div></div></div>'+
+ '<button class="btn" style="background:#e74c3c" onclick="payout()">🏦 CASH OUT</button><p class="note">all money here is imaginary 😂</p>'}}
+function confirmDel(i){const m=$('m');S.ads.splice(i,1);save();render();toast('🗑️ ad deleted');return 1}
+function publish(){if(!D.name.trim())return toast('give your ad a name first');D.bid=Math.max(0,parseFloat(D.price)||0);S.ads.unshift({...D,bid:+D.bid,imp:0,clk:0,earn:0,on:true});save();D={name:'',tag:'',emo:'🎮',col:'#6c5ce7',cta:'PLAY NOW',price:'',fmt:'both',bid:'0.05'};toast('🚀 ad published!');tab('ads',document.querySelectorAll('nav button')[1])}
+function payout(){if(S.money<1)return toast('need at least $1.00 to cash out');toast('🏦 sent $'+S.money.toFixed(2)+' to your imaginary bank');S.money=0;save();render()}
+setInterval(()=>{let gain=0;S.ads.forEach(a=>{if(!a.on)return;const b=Math.min(a.bid,10);const v=Math.floor(Math.random()*25*(1+b*4)*(a.play?2:1));a.imp+=v;const p=Math.min(.5,.03+b*.02);const c=Math.round(v*p*(0.6+Math.random()*.8));a.clk+=c;const g=c*a.bid+v*.0005;a.earn+=g;gain+=g});
+ gain*=boost();lastGain=lastGain*.7+gain*.3;if(gain){S.money+=gain;S.hist[6]+=gain;save();if(cur=='ads'||cur=='earn'||cur=='pay')render();else $('hm').textContent=fm(S.money)}},1000);
+render();
+</script></body></html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Test Zone</title>
+<style>
+html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:#111;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#g{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;box-sizing:border-box}
+h1{font-size:38px;margin:0 0 10px}p{font-size:18px;margin:6px;opacity:.9}
+button{font-size:22px;padding:16px 28px;margin:8px;border:0;border-radius:14px;color:#fff;font-weight:700}
+.y{background:#27ae60}.n{background:#c0392b}.s{background:#2980b9}.p{background:#8e44ad}.o{background:#e67e22}
+.big{font-size:34px;padding:22px 60px}
+#bar{width:80%;height:10px;background:#333;border-radius:5px;margin:14px 0}#fill{height:100%;width:0;background:#2980b9;border-radius:5px}
+.row{display:flex;justify-content:space-between;width:240px;font-size:17px;margin:3px auto}
+small{font-size:13px;opacity:.55}
+h2{font-size:24px;margin:10px 0 18px;line-height:1.3;max-width:500px}.qb{font-size:20px;padding:14px 24px;margin:6px;background:#2980b9;min-width:220px}.iq{font-size:80px;font-weight:900;margin:0;color:#f1c40f}#fill.q{background:#8e44ad}</style></head><body><div id="g"></div>
+<audio id="unlock" playsinline loop></audio>
+<script>
+const g=document.getElementById('g');
+function menu(){g.innerHTML='<h1>🧪 TEST ZONE</h1><p>pick a test</p><button class="s big" style="min-width:280px;font-size:26px;padding:18px 20px" onclick="hHome()">🎧 HEARING TEST</button><button class="p big" style="min-width:280px;font-size:26px;padding:18px 20px" onclick="qHome()">🧠 IQ TEST</button><button class="o big" style="min-width:280px;font-size:26px;padding:18px 20px" onclick="eHome()">👀 EYE TEST</button><button class="y big" style="min-width:280px;font-size:26px;padding:18px 20px" onclick="cHome()">🎨 COLOR BLIND</button>'}
+
+// child = harder (higher beeps, quieter). adult = easier (lower beeps, louder)
+const MODES={
+ head:{
+  child:{F:[4000,8000,12000,14000,15000,16000,17000,18000,19000,20000],vol:.04},
+  adult:{F:[1000,2000,4000,8000,10000,12000,13000,14000,15000,16000,17000],vol:.1}},
+ phone:{
+  child:{F:[4000,8000,12000,14000,15000,16000,17000,18000],vol:.18},
+  adult:{F:[1000,4000,8000,10000,12000,14000,15000,16000,17000],vol:.35}}
+};
+let ac,i=0,res=[],dev,who,F,VOL;
+
+// silent wav so iPhone plays sound even with the silent switch on
+(function(){const n=4410,b=new ArrayBuffer(44+n*2),d=new DataView(b);const w=(o,s)=>[...s].forEach((c,k)=>d.setUint8(o+k,c.charCodeAt(0)));
+w(0,'RIFF');d.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);d.setUint32(24,44100,true);d.setUint32(28,88200,true);d.setUint16(32,2,true);d.setUint16(34,16,true);w(36,'data');d.setUint32(40,n*2,true);
+document.getElementById('unlock').src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}))})();
+
+function audioOn(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}try{document.getElementById('unlock').play().catch(()=>{})}catch(e){}}
+
+function hHome(){g.innerHTML='<h1>🎧 HEARING TEST</h1><button class="y big" onclick="q1()">START</button><small>just for fun, not a real doctor test</small><button class="n" onclick="menu()">⬅ BACK</button>'}
+function q1(){audioOn();g.innerHTML='<p>question 1 / 2</p><h1>What are you using?</h1><button class="s" onclick="dev=\'head\';q2()">🎧 HEADPHONES</button><button class="p" onclick="dev=\'phone\';q2()">📱 PHONE SPEAKER</button>'}
+function q2(){g.innerHTML='<p>question 2 / 2</p><h1>Adult or child?</h1><button class="o" onclick="who=\'adult\';go()">🧑 ADULT</button><button class="y" onclick="who=\'child\';go()">🧒 CHILD</button>'}
+function go(){F=MODES[dev][who].F;VOL=MODES[dev][who].vol;audioOn();
+ if(dev=='phone'){g.innerHTML='<h1>📱 SPEAKER CHECK</h1><p>turn volume up to about 75%</p><p>hold phone near your ear</p><p>can you hear this beep?</p><div><button class="y" onclick="hStart()">YES</button><button class="n" onclick="noSound()">NO</button></div><button class="s" onclick="beep(1000,.6)">🔁 replay</button>';beep(1000,.6)}
+ else hStart()}
+function noSound(){g.innerHTML='<h1>🔇 NO SOUND</h1><p>turn your volume up</p><p>turn off silent mode</p><p>close other apps playing audio</p><button class="p" onclick="go()">TRY AGAIN</button><button class="s" onclick="hHome()">BACK</button>'}
+function hStart(){audioOn();i=0;res=[];hStep()}
+function beep(f,v){v=v||VOL;if(!ac)return;const o=ac.createOscillator(),gn=ac.createGain(),t=ac.currentTime;o.frequency.value=f;gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(v,t+.05);gn.gain.setValueAtTime(v,t+.5);gn.gain.linearRampToValueAtTime(0,t+.6);o.connect(gn).connect(ac.destination);o.start(t);o.stop(t+.65)}
+function hStep(){if(i>=F.length)return hDone();const f=F[i];g.innerHTML='<p>'+(dev=='phone'?'📱':'🎧')+' '+(who=='child'?'🧒 child':'🧑 adult')+' · tone '+(i+1)+' / '+F.length+'</p><h1>'+(f>=1000?f/1000+'k':f)+' Hz</h1><div id="bar"><div id="fill" style="width:'+(i/F.length*100)+'%"></div></div><p>did you hear it?</p><div><button class="y" onclick="hAns(1)">YES</button><button class="n" onclick="hAns(0)">NO</button></div><button class="s" onclick="beep('+f+')">🔁 replay</button>';beep(f)}
+function hAns(h){res.push([F[i],h]);i++;hStep()}
+function hDone(){const heard=res.filter(r=>r[1]).map(r=>r[0]);const top=heard.length?Math.max(...heard):0;const maxed=top==F[F.length-1];
+const score=heard.length+' / '+F.length;
+let msg;
+if(who=='child')msg=maxed?'perfect kid ears 😎':top>=16000?'great ears 👍':top>=12000?'pretty good':'kinda low for a kid 🤔';
+else msg=maxed?'amazing ears for an adult 😎':top>=12000?'good for an adult 👍':top>=8000?'normal for an adult':'getting old 👴';
+let note=dev=='phone'&&!maxed?'<small>phone speakers get quiet on high beeps, so your ears might be better than this</small>':'';
+g.innerHTML='<h1>RESULTS</h1><p>'+(who=='child'?'🧒 child':'🧑 adult')+' · '+(dev=='phone'?'📱 speaker':'🎧 headphones')+'</p><p>score: <b>'+score+'</b></p><p>highest you heard: <b>'+(top?top+' Hz':'none')+'</b></p><p><b>'+msg+'</b></p>'+note+'<div style="margin:12px 0">'+res.map(r=>'<div class="row"><span>'+r[0]+' Hz</span><span>'+(r[1]?'✅':'❌')+'</span></div>').join('')+'</div><button class="s" onclick="hStart()">TRY AGAIN</button><button class="p" onclick="hHome()">START OVER</button><button class="n" onclick="menu()">⬅ MENU</button>'}
+
+const Q=[
+["What comes next? 2, 4, 8, 16, ...",["32","24","20","30"]],
+["What comes next? 1, 1, 2, 3, 5, 8, ...",["13","11","12","16"]],
+["Which one doesn't belong?",["Carrot","Dog","Cat","Horse"]],
+["All bloops are razzies. All razzies are lazzies. Are all bloops lazzies?",["Yes","No","Can't tell"]],
+["What comes next? 81, 27, 9, 3, ...",["1","0","2","1.5"]],
+["Book is to reading as fork is to...",["Eating","Kitchen","Spoon","Cooking"]],
+["How many months have 28 days?",["12","1","2","6"]],
+["Mary's dad has 5 daughters: Nana, Nene, Nini, Nono and...",["Mary","Nunu","Nina","Nan"]],
+["What comes next? 3, 6, 11, 18, 27, ...",["38","36","35","40"]],
+["Unscramble CIFAIPC. It's a(n)...",["Ocean","City","Animal","River"]],
+["A bat and ball cost $1.10. The bat costs $1 more than the ball. How much is the ball?",["5¢","10¢","15¢","1¢"]],
+["5 machines make 5 widgets in 5 min. How long for 100 machines to make 100 widgets?",["5 min","100 min","20 min","50 min"]],
+["A lily pad patch doubles every day. It covers the lake on day 48. When was it half covered?",["Day 47","Day 24","Day 46","Day 12"]],
+["What comes next? 2, 3, 5, 9, 17, ...",["33","25","31","34"]],
+["A clock says 3:15. What's the angle between the hands?",["7.5°","0°","15°","90°"]]
+];
+let qi=0,score=0;
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+function qHome(){g.innerHTML='<h1>🧠 IQ TEST</h1><p>'+Q.length+' questions</p><button class="y big" onclick="qStart()">START</button><small>just for fun, not a real IQ test</small><button class="n" onclick="menu()">⬅ BACK</button>'}
+function qStart(){qi=0;score=0;qStep()}
+function qStep(){if(qi>=Q.length)return qDone();const [q,a]=Q[qi];
+ g.innerHTML='<p>question '+(qi+1)+' / '+Q.length+'</p><div id="bar"><div id="fill" class="q" style="width:'+(qi/Q.length*100)+'%"></div></div><h2>'+q+'</h2>'+shuf(a).map(x=>'<button class="qb" onclick="qAns(this)" data-a="'+x+'">'+x+'</button>').join('')}
+function qAns(b){if(b.dataset.a==Q[qi][1][0])score++;qi++;qStep()}
+function qDone(){const iq=70+score*5;
+ const msg=iq>=140?'genius 🤯':iq>=125?'super smart 😎':iq>=110?'smart 👍':iq>=95?'average':iq>=85?'kinda low 😬':'uh oh 💀';
+ g.innerHTML='<p>your IQ</p><p class="iq">'+iq+'</p><h2>'+msg+'</h2><p>'+score+' / '+Q.length+' correct</p><button class="y big" onclick="qStart()">TRY AGAIN</button><button class="n" onclick="menu()">⬅ MENU</button>'}
+// ===== EYE TEST =====
+const EL='EFPTOZLDC'.split(''),ES=[90,70,54,42,32,25,19,15,12,9,7,5,4,3];let ei=0,ED=1;
+function eHome(){g.innerHTML='<h1>👀 EYE TEST</h1><p>measure with a ruler or tape measure</p><p>prop your phone up, then stand back</p><p>how far will you be?</p><button class="s" onclick="ED=1;ei=0;eStep()">📏 2 feet</button><button class="p" onclick="ED=2;ei=0;eStep()">📏 4 feet</button><button class="o" onclick="ED=3;ei=0;eStep()">📏 6 feet</button><small>walk up to tap your answer · just for fun, not a real eye exam</small><button class="n" onclick="menu()">⬅ BACK</button>'}
+function eStep(){if(ei>=ES.length)return eDone();const L=EL[Math.floor(Math.random()*EL.length)];
+ const opts=shuf([L,...shuf(EL.filter(x=>x!=L)).slice(0,3)]);
+ g.innerHTML='<p>level '+(ei+1)+' / '+ES.length+'</p><div style="min-height:110px;display:flex;align-items:center;justify-content:center;margin:20px 0"><span style="font-family:Georgia,serif;font-weight:700;font-size:'+ES[ei]*ED+'px;line-height:1">'+L+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:300px">'+opts.map(x=>'<button style="margin:0;min-width:0;background:#2980b9;font-family:Georgia,serif;font-size:'+Math.min(110,Math.max(56,ES[ei]*ED))+'px;padding:6px 0;line-height:1.1" onclick="eAns(\''+x+'\',\''+L+'\')">'+x+'</button>').join('')+'</div><button class="n" onclick="eAns(0,1)">🤷 can\'t see it</button>'}
+function eAns(a,L){if(a==L){ei++;eStep()}else eDone()}
+function eDone(){const v=['20/200','20/160','20/120','20/100','20/80','20/60','20/50','20/40','20/30','20/25','20/20','20/15','20/12','20/10','20/8'][ei];
+ const msg=ei>=12?'eagle eyes 🦅':ei>=10?'great vision 😎':ei>=7?'pretty good 👍':ei>=4?'kinda blurry 🤓':'get some glasses 👓';
+ g.innerHTML='<p>your vision</p><p class="iq">'+v+'</p><h2>'+msg+'</h2><p>passed '+ei+' / '+ES.length+' levels</p><button class="y big" onclick="eHome()">TRY AGAIN</button><button class="n" onclick="menu()">⬅ MENU</button>'}
+
+// ===== COLOR BLIND TEST =====
+// [number, figure colors, background colors]
+const CP=[
+ [12,['#2b2b2b','#3a3a3a'],['#e8c88a','#f0d9a6','#d9b26f']],
+ [74,['#6e9e3a','#86ad4c','#5d8a31'],['#d9824a','#e39a5f','#c97540','#e8a868']],
+ [8,['#d65a3b','#e0714a','#c64d32'],['#8aa65b','#9cb56b','#7b9a50','#a8b870']],
+ [29,['#c9a24a','#d6b05a','#b8933f'],['#8fae6a','#9fbb78','#82a160']],
+ [45,['#e07b56','#ea8f68','#d46d4a'],['#b9a35e','#c8b26a','#a99451']],
+ [6,['#7aa35a','#8ab468','#6c944e'],['#c88c5e','#d69c6c','#ba7e52']],
+ [57,['#d9a44c','#e3b35d','#cb9640'],['#a3a65a','#b0b266','#96994f']],
+ [3,['#4d8f5c','#5c9e6a','#428450'],['#b36a5a','#c27a68','#a65e4f']]
+];let ci=0,cs=0,cOrder=[];
+function cHome(){g.innerHTML='<h1>🎨 COLOR BLIND TEST</h1><p>find the number in the dots</p><p>turn your brightness up</p><button class="y big" onclick="cStart()">START</button><small>just for fun, not a real eye exam</small><button class="n" onclick="menu()">⬅ BACK</button>'}
+function cStart(){ci=0;cs=0;cOrder=[0,...shuf([1,2,3,4,5,6,7])];cStep()}
+function plate(cv,num,fc,bc){const S=300,x=cv.getContext('2d');cv.width=cv.height=S;
+ const m=document.createElement('canvas');m.width=m.height=S;const mx=m.getContext('2d');mx.fillStyle='#000';mx.lineWidth=14;mx.strokeStyle='#000';mx.font='900 210px Arial Black,Arial';mx.textAlign='center';mx.textBaseline='middle';mx.fillText(num,S/2,S/2+10);mx.strokeText(num,S/2,S/2+10);
+ const md=mx.getImageData(0,0,S,S).data,pts=[];
+ for(let t=0;t<20000&&pts.length<1600;t++){const r=2.5+Math.random()*5,a=Math.random()*6.283,d=Math.sqrt(Math.random())*(S/2-r-2),px=S/2+Math.cos(a)*d,py=S/2+Math.sin(a)*d;
+  if(pts.some(p=>(p[0]-px)**2+(p[1]-py)**2<(p[2]+r+1)**2))continue;pts.push([px,py,r])}
+ pts.forEach(([px,py,r])=>{const inF=md[(Math.round(py)*S+Math.round(px))*4+3]>100;const pal=inF?fc:bc;x.fillStyle=pal[Math.floor(Math.random()*pal.length)];x.beginPath();x.arc(px,py,r,0,6.283);x.fill()})}
+function cStep(){if(ci>=cOrder.length)return cDone();const [n,fc,bc]=CP[cOrder[ci]];
+ let opts=new Set([n]);while(opts.size<4){let k=n<10?1+Math.floor(Math.random()*9):10+Math.floor(Math.random()*90);opts.add(k)}
+ g.innerHTML='<p>plate '+(ci+1)+' / '+cOrder.length+'</p><canvas id="cv" style="width:260px;height:260px;margin:10px 0"></canvas><div>'+shuf([...opts]).map(x=>'<button class="qb" style="min-width:80px" onclick="cAns('+x+')">'+x+'</button>').join('')+'</div><button class="n" onclick="cAns(-1)">🤷 no number</button>';
+ plate(document.getElementById('cv'),n,fc,bc)}
+function cAns(a){if(a==CP[cOrder[ci]][0])cs++;ci++;cStep()}
+function cDone(){const t=cOrder.length;const msg=cs==t?'perfect color vision 🌈':cs>=t-1?'normal color vision 👍':cs>=t-3?'might be a little color blind 🤔':'probably color blind 🎨';
+ g.innerHTML='<p>you got</p><p class="iq">'+cs+' / '+t+'</p><h2>'+msg+'</h2><button class="y big" onclick="cStart()">TRY AGAIN</button><button class="n" onclick="menu()">⬅ MENU</button>'}
+menu();
+</script></body></html>
