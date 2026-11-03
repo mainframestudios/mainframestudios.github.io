@@ -1,3 +1,3 @@
-# Maxcade Games
+# Mainframe
 
-Official website of Maxcade Games.
+Official website of Mainframe Studio.

@@ -149,7 +149,7 @@ const GC=[
 ['💻','GAME CRATE','works on phones AND computers now.'],
 ['⏳','COMING SOON to GAME CRATE','new games are on the way. check the Coming soon shelf.']
 ];
-const GCF=['100% free','new games added all the time','works on phone + computer','no download needed','made by Maxcade developers','search + filters','NEW and recently updated tags','home screen app ready'];
+const GCF=['100% free','new games added all the time','works on phone + computer','no download needed','made by Mainframe developers','search + filters','NEW and recently updated tags','home screen app ready'];
 const GCR=['"best crate ever" - a goat','"i played for 6 hours" - Kyle','"better than a PS5 (it is free)" - Dave','"my brother wont stop playing" - Max','"10/10 crate" - Sue','"the menu music slaps" - Ray'];
 const AFEAT=['100% real (not real)','approved by 3 ducks','works sometimes','now in beige','comes with a sticker','no batteries needed (it needs batteries)','dishwasher scared','made in a garage','faster than a snail','smells like Tuesday','glow in the dark (only in daylight)','waterproof-ish','scientists hate it','your mom will say no','includes free air','limited edition (we made 9 million)'];
 const AREV=['"my dog likes it" - Dave','"it arrived. thats all." - Sue','"i bought 40" - Kyle','"5 stars, it exists" - Bob','"my grandma cried" - Tim','"i dont know why i bought this" - Jen','"better than nothing" - Ray','"it ate my homework" - Max','"10/10 would get scammed again" - Lou'];
@@ -179,7 +179,7 @@ function showSite(a,after){const gc=!!a[5];let cart=0;
  '<h2>✨ FEATURES</h2>'+feats.map(f=>'<div class="ft">✅ '+f+'</div>').join('')+
  '<h2>⭐ REVIEWS</h2>'+revs.map(r=>'<div class="rv"><div>⭐⭐⭐⭐⭐</div>'+r+'</div>').join('')+
  '<h2>❓ FAQ</h2>'+faq.map(q=>'<div class="ft"><b>'+q[0]+'</b><br>'+q[1]+'</div>').join('')+
- '<div class="foot">© 2026 '+(gc?'Maxcade developers':'Imaginary Inc.')+' · '+url+'<br>'+(gc?'':'this website is not real. nothing here is real.')+'</div></div>';
+ '<div class="foot">© 2026 '+(gc?'Mainframe developers':'Imaginary Inc.')+' · '+url+'<br>'+(gc?'':'this website is not real. nothing here is real.')+'</div></div>';
  const close=()=>{s.style.display='none';s.innerHTML='';after()};
  document.getElementById('sb').onclick=close;document.getElementById('sx').onclick=close;
  document.getElementById('buy').onclick=e=>{if(gc){e.target.textContent='🎮 go to '+url;return}cart++;document.getElementById('cc').textContent=cart;e.target.textContent='✅ added! ('+cart+' in imaginary cart)'}}
@@ -345,8 +345,8 @@ function realEnd(){running=false;ui.className='';pb.style.display='none';documen
  ui.style.display='flex';const acc=shots?Math.round(hits/shots*100):0;const rs=MD.endless?2:1;const rank=score>=600*rs?'🥇 GOLD':score>=350*rs?'🥈 SILVER':score>=150*rs?'🥉 BRONZE':'🪵 ROOKIE';
  ui.innerHTML='<h1>'+(MD.endless?'GAME OVER!':'TIME\'S UP!')+'</h1><p>'+MD.n+'</p><p style="font-size:48px;font-weight:900;color:#f1c40f;margin:10px">'+score+'</p><p style="font-size:26px;font-weight:800">'+rank+'</p><p>🎯 accuracy: '+acc+'% ('+hits+'/'+shots+')</p><p>'+(nb?'🏆 NEW BEST!':'best: '+best)+'</p><button onclick="start()">PLAY AGAIN</button><button style="background:#555;font-size:22px;padding:12px 40px;margin:0" onclick="home()">🏠 MAIN MENU</button><div class="ban" style="position:relative;bottom:auto" onclick="fakeTap(this)">'+banHTML()+'</div>'}
 </script>
-<!-- Maxcade home tab -->
-<a id="mx-home" href="/#games" aria-label="Back to Maxcade Games"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Home</span></a>
+<!-- Mainframe home tab -->
+<a id="mx-home" href="/#games" aria-label="Back to Mainframe"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Home</span></a>
 <style>
 #mx-home{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483647;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 7px 12px 5px;background:rgba(17,17,17,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.14);border-left:0;border-radius:0 12px 12px 0;color:#fff;text-decoration:none;font:600 10px/1 -apple-system,BlinkMacSystemFont,Inter,sans-serif;letter-spacing:.04em;-webkit-tap-highlight-color:transparent;user-select:none}
 #mx-home span{writing-mode:vertical-rl;transform:rotate(180deg)}
