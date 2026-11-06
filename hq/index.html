@@ -515,9 +515,13 @@ async function ensureHeadCoder(){
   if(!canAdmin) return;
   try{
     const ref=doc(db,"members","anonymous");
-    if(!(await getDoc(ref)).exists()){
+    const cur=await getDoc(ref);
+    if(cur.exists() && cur.data().statusRev!==1){
+      await updateDoc(ref,{state:"available",statusRev:1,updatedAt:Date.now()});
+    }
+    if(!cur.exists()){
       await setDoc(doc(db,"usernames","anonymous"),{uid:"anonymous",at:Date.now()});
-      await setDoc(ref,{username:"anonymous",title:"Head Coder",focus:"Building Mainframe Headquarters",state:"working",joinedAt:Date.now(),updatedAt:Date.now()});
+      await setDoc(ref,{username:"anonymous",title:"Head Coder",focus:"Building Mainframe Headquarters",state:"available",statusRev:1,joinedAt:Date.now(),updatedAt:Date.now()});
       await addDoc(collection(db,"announcements"),{title:"Welcome to Mainframe HQ",body:"This is the team's home base. Post tasks, check announcements, and set your status so everyone knows what you're working on.",pinned:true,author:"anonymous",createdAt:Date.now()});
     }
   }catch(e){}
@@ -640,7 +644,14 @@ function memberCard(id){
       h("div",{class:"n",text:"@"+m.username+(id===uid?" (you)":"")}),
       m.title? h("div",{class:"ti",text:m.title}):null,
       h("div",{class:"f",text:m.focus||"No current focus set"}),
-      h("div",{class:"st"}, h("span",{class:"dot s-"+m.state}), STATES[m.state], m.updatedAt? " · updated "+ago(m.updatedAt):"", active? " · "+active+" in progress":"")));
+      h("div",{class:"st"}, h("span",{class:"dot s-"+m.state}), STATES[m.state], m.updatedAt? " · updated "+ago(m.updatedAt):"", active? " · "+active+" in progress":""),
+      canAdmin&&id==="anonymous"&&id!==uid? h("div",{class:"seg",style:"margin-top:10px"}, ...Object.keys(STATES).map(k=>h("button",{class:k===m.state?"on":"",onclick:()=>setAnon(k)}, h("span",{class:"dot s-"+k}), STATES[k]))):null));
+}
+let anonBusy=false;
+async function setAnon(k){
+  if(anonBusy||!members.anonymous||members.anonymous.state===k) return; anonBusy=true;
+  try{ await updateDoc(doc(db,"members","anonymous"),{state:k,updatedAt:Date.now()}); toast("Saved"); }catch(e){ failWrite(e); }
+  anonBusy=false;
 }
 function taskEl(t){
   const canDel=t.createdBy===uid||canAdmin;
