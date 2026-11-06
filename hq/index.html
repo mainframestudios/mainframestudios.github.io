@@ -533,7 +533,7 @@ function startApp(){
   const fresh=s=>{ if(!s.metadata.fromCache){ clearTimeout(staleTimer); $("staleNote").classList.add("hidden"); } };
   unsubs.push(onSnapshot(collection(db,"members"), s=>{
     fresh(s); members={};
-    s.docs.forEach(d=>{ const v=d.data(); members[d.id]={username:str(v.username,20),title:str(v.title,40),focus:str(v.focus,120),state:STATES[v.state]?v.state:"offline",updatedAt:+v.updatedAt||0}; });
+    s.docs.forEach(d=>{ const v=d.data(); members[d.id]={username:str(v.username,20),title:str(v.title,40),focus:str(v.focus,120),state:STATES[v.state]?v.state:"offline",updatedAt:+v.updatedAt||0,manualUntil:+v.manualUntil||0}; });
     renderAll();
   },()=>{}));
   unsubs.push(onSnapshot(query(collection(db,"tasks"),orderBy("createdAt","desc")), s=>{
@@ -635,8 +635,25 @@ function renderOverview(){
   const ids=memberIds();
   $("ovTeam").replaceChildren(...(ids.length? ids.map(memberCard):[h("div",{class:"empty",text:"No one has joined yet."})]));
 }
-function memberCard(id){
+/* head coder status: changes on its own every 1 to 2 days (same for everyone) */
+function rnd(n){ n=(n^0x9e3779b9)>>>0; n=Math.imul(n^(n>>>16),0x85ebca6b)>>>0; n=Math.imul(n^(n>>>13),0xc2b2ae35)>>>0; return ((n^(n>>>16))>>>0)/4294967296; }
+function anonAuto(now){
+  const DAY=86400000; let start=Date.UTC(2026,10,6,12), prev="", i=0, state="available";
+  while(true){
+    const len=(rnd(i*2+1)<0.5?1:2)*DAY;
+    const r=rnd(i*2+2), opts=["working","available","away"].filter(x=>x!==prev);
+    state= i===0? "available" : opts[r<0.6?0:1];
+    if(now<start+len) return {state,start,end:start+len};
+    prev=state; start+=len; i++;
+  }
+}
+function eff(id){
   const m=members[id];
+  if(id!=="anonymous"||m.manualUntil>Date.now()) return {state:m.state,updatedAt:m.updatedAt};
+  const a=anonAuto(Date.now()); return {state:a.state,updatedAt:a.start};
+}
+function memberCard(id){
+  const m=Object.assign({},members[id],eff(id));
   const active=tasks.filter(t=>t.assignee===id&&t.status==="doing").length;
   return h("div",{class:"card member"},
     h("div",{class:"av lg",text:m.username[0]}),
@@ -649,8 +666,8 @@ function memberCard(id){
 }
 let anonBusy=false;
 async function setAnon(k){
-  if(anonBusy||!members.anonymous||members.anonymous.state===k) return; anonBusy=true;
-  try{ await updateDoc(doc(db,"members","anonymous"),{state:k,updatedAt:Date.now()}); toast("Saved"); }catch(e){ failWrite(e); }
+  if(anonBusy||!members.anonymous||eff("anonymous").state===k) return; anonBusy=true;
+  try{ await updateDoc(doc(db,"members","anonymous"),{state:k,manualUntil:anonAuto(Date.now()).end,updatedAt:Date.now()}); toast("Saved"); }catch(e){ failWrite(e); }
   anonBusy=false;
 }
 function taskEl(t){
