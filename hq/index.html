@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mainframe HQ</title>
+<link rel="icon" href="/icon-32.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070b;--panel:#101018;--panel2:#161622;--line:#23233a;--text:#ececf4;--mute:#8a8aa3;
+  --a:#8b5cf6;--b:#22d3ee;--grad:linear-gradient(135deg,#8b5cf6,#22d3ee);
+  --ok:#34d399;--warn:#fbbf24;--off:#5b5b72;--bad:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:960px;margin:0 auto;padding:16px 16px 96px}
+
+/* gate screens */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:32px 26px;text-align:center}
+.logo{width:60px;height:60px;border-radius:16px;background:#000;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.logo span{font-weight:800;font-size:34px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gate h1{font-size:22px;font-weight:700;margin-bottom:6px}
+.gate p{color:var(--mute);font-size:14px;margin-bottom:22px}
+.field{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 14px;margin-bottom:10px}
+.field b{color:var(--mute);font-weight:500}
+.field input{flex:1;background:none;border:0;outline:0;padding:13px 4px}
+.hint{font-size:12px;color:var(--mute);text-align:left;margin-bottom:16px;min-height:16px}
+.hint.err{color:var(--bad)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 18px;font-weight:600;cursor:pointer;background:var(--panel2);border:1px solid var(--line)}
+.btn.primary{background:var(--grad);border:0;color:#fff}
+.btn.block{width:100%}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:default}
+.google-note{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;font-size:13px;color:var(--mute)}
+.gmark{width:22px;height:22px;flex:none;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#4285f4;font-size:14px}
+
+/* app */
+header{position:sticky;top:0;z-index:5;background:rgba(7,7,11,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hbar{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.hbar .logo{width:36px;height:36px;border-radius:10px;margin:0}
+.hbar .logo span{font-size:20px}
+.brand{font-weight:700;font-size:16px;letter-spacing:.2px}
+.brand small{display:block;color:var(--mute);font-weight:500;font-size:12px}
+.me{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px;font-size:13px;font-weight:600}
+.av{width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex:none;text-transform:uppercase}
+.av.lg{width:42px;height:42px;font-size:16px}
+nav.tabs{max-width:960px;margin:0 auto;display:flex;gap:4px;padding:0 12px 10px;overflow-x:auto}
+nav.tabs button{background:none;border:0;padding:8px 14px;border-radius:10px;color:var(--mute);font-weight:600;cursor:pointer;white-space:nowrap}
+nav.tabs button.on{background:var(--panel2);color:var(--text)}
+.notice{background:#1b1630;border:1px solid #3b2d6b;color:#cbbcff;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);font-weight:600;margin:22px 0 10px}
+h2:first-child{margin-top:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.grid{display:grid;gap:12px}
+@media(min-width:720px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat b{display:block;font-size:24px;font-weight:700}
+.stat span{color:var(--mute);font-size:12px}
+
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.in{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:0;width:100%}
+.in:focus{border-color:var(--a)}
+textarea.in{min-height:80px;resize:vertical}
+label.l{display:block;font-size:12px;color:var(--mute);margin:10px 0 5px}
+.mute{color:var(--mute)}
+.small{font-size:12px}
+.empty{color:var(--mute);font-size:14px;padding:14px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.s-working{background:var(--ok)} .s-available{background:var(--b)} .s-away{background:var(--warn)} .s-offline{background:var(--off)}
+
+/* announcements */
+.ann{padding:14px 0;border-bottom:1px solid var(--line)}
+.ann:last-child{border-bottom:0}
+.ann h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.ann p{white-space:pre-wrap;color:#cfcfe0}
+.meta{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:12px;margin-top:8px}
+.pin{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* tasks */
+.board{display:grid;gap:12px}
+@media(min-width:760px){.board{grid-template-columns:repeat(3,1fr)}}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:120px}
+.col-h{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px;margin:2px 4px 10px}
+.count{background:var(--panel2);border-radius:999px;padding:1px 9px;font-size:12px;color:var(--mute)}
+.task{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.task .t{font-weight:600;margin-bottom:6px;word-break:break-word}
+.tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)}
+.tag{border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.tag.proj{border-color:#3b2d6b;color:#c4b5fd}
+.tag.late{border-color:#7f1d1d;color:var(--bad)}
+.tact{display:flex;gap:6px;margin-top:10px}
+.tact button{flex:1}
+.x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:12px;padding:4px}
+.x:hover{color:var(--bad)}
+
+/* team */
+.member{display:flex;gap:12px;align-items:flex-start}
+.member .n{font-weight:700}
+.member .ti{font-size:13px;color:#c4b5fd}
+.member .f{font-size:14px;margin-top:6px;color:#cfcfe0}
+.st{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-top:6px}
+
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button.on{background:var(--panel);color:var(--text)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<section id="scrLoading" class="gate">
+  <div class="gate-card">
+    <div class="logo"><span>M</span></div>
+    <h1>Mainframe HQ</h1>
+    <p id="loadingMsg">Connecting to headquarters...</p>
+  </div>
+</section>
+
+<!-- Setup needed -->
+<section id="scrSetup" class="gate hidden">
+  <div class="gate-card">
+    <div class="logo"><span>M</span></div>
+    <h1>HQ isn't connected yet</h1>
+    <p>The studio owner needs to add the Firebase settings to this page.</p>
+  </div>
+</section>
+
+<!-- Sign in / create account -->
+<section id="scrSignin" class="gate hidden">
+  <div class="gate-card">
+    <div class="logo"><span>M</span></div>
+    <h1 id="sHead">Sign in to Mainframe HQ</h1>
+    <p id="sSub">Team members only.</p>
+    <form id="fSign">
+      <div class="field"><input id="sEmail" type="email" maxlength="80" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Email"></div>
+      <div class="field"><input id="sPass" type="password" maxlength="64" autocomplete="current-password" placeholder="Password"></div>
+      <div id="sHint" class="hint"></div>
+      <button class="btn primary block" id="btnSign" type="submit">Sign in</button>
+      <button class="btn block" id="btnLink" type="button" style="margin-top:10px">Email me a sign-in link instead</button>
+    </form>
+    <p class="small mute" style="margin:16px 0 0"><span id="sSwapText">New to the team?</span> <a href="#" id="sSwap" style="color:var(--b);font-weight:600">Create an account</a></p>
+  </div>
+</section>
+
+<!-- Username -->
+<section id="scrUsername" class="gate hidden">
+  <div class="gate-card">
+    <div class="logo"><span>M</span></div>
+    <h1>Create your username</h1>
+    <p>This is how the team will see you in HQ.</p>
+    <form id="fUser">
+      <div class="field"><b>@</b><input id="inUser" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username"></div>
+      <div class="field"><input id="inTitle" maxlength="40" placeholder="Job title (e.g. Lead Developer)"></div>
+      <div id="userHint" class="hint">3 to 20 characters: letters, numbers and underscores.</div>
+      <button class="btn primary block" id="btnUser" type="submit">Enter HQ</button>
+    </form>
+  </div>
+</section>
+
+<!-- App -->
+<section id="scrApp" class="hidden">
+  <header>
+    <div class="hbar">
+      <div class="logo"><span>M</span></div>
+      <div class="brand">Mainframe HQ<small>Mainframe Studio</small></div>
+      <div class="me"><div class="av" id="meAv"></div><span id="meName"></span></div><button class="btn sm" id="btnOut">Sign out</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="overview" class="on">Overview</button>
+      <button data-tab="tasks">Tasks</button>
+      <button data-tab="announcements">Announcements</button>
+      <button data-tab="team">Team</button>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <div id="staleNote" class="notice hidden">Headquarters can't be reached right now. What you see may be out of date.</div>
+    <div id="roNote" class="notice hidden">You don't have permission to make that change.</div>
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview">
+      <h2>Welcome back, <span id="welcomeName"></span></h2>
+      <div class="stats">
+        <div class="stat"><b id="stTodo">0</b><span>To do</span></div>
+        <div class="stat"><b id="stDoing">0</b><span>In progress</span></div>
+        <div class="stat"><b id="stDone">0</b><span>Done</span></div>
+      </div>
+
+      <h2>Your status</h2>
+      <div class="card">
+        <div class="seg" id="mySeg">
+          <button data-s="working"><span class="dot s-working"></span>Working</button>
+          <button data-s="available"><span class="dot s-available"></span>Available</button>
+          <button data-s="away"><span class="dot s-away"></span>Away</button>
+          <button data-s="offline"><span class="dot s-offline"></span>Offline</button>
+        </div>
+        <label class="l">What are you working on?</label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input class="in" id="myFocus" maxlength="120" placeholder="e.g. Fixing bugs in Tower Brawl">
+          <button class="btn sm primary" id="btnFocus">Update</button>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:0">
+        <div>
+          <h2>Latest announcement</h2>
+          <div class="card" id="ovAnn"></div>
+        </div>
+        <div>
+          <h2>Your tasks</h2>
+          <div class="card" id="ovTasks"></div>
+        </div>
+      </div>
+
+      <h2>Who's working on what</h2>
+      <div class="grid g2" id="ovTeam"></div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="tab-tasks" class="hidden">
+      <h2>New task</h2>
+      <form class="card" id="fTask">
+        <input class="in" id="tTitle" maxlength="140" placeholder="Task name" required>
+        <div class="grid g3" style="margin-top:10px">
+          <div><label class="l">Project</label><input class="in" id="tProj" list="projList" maxlength="40" placeholder="Project"></div>
+          <div><label class="l">Assign to</label><select class="in" id="tWho"></select></div>
+          <div><label class="l">Due date</label><input class="in" id="tDue" type="date"></div>
+        </div>
+        <datalist id="projList">
+          <option value="Game Crate"><option value="Studio Website"><option value="Tower Brawl"><option value="Target Blast"><option value="Pinecrest Rivals"><option value="Test Zone"><option value="Homework Bot">
+        </datalist>
+        <button class="btn primary" style="margin-top:12px" type="submit">Add task</button>
+      </form>
+
+      <h2>Board</h2>
+      <div class="row" style="margin-bottom:12px">
+        <select class="in" id="filterWho" style="max-width:220px"></select>
+      </div>
+      <div class="board">
+        <div class="col"><div class="col-h">To do <span class="count" id="cTodo">0</span></div><div id="colTodo"></div></div>
+        <div class="col"><div class="col-h">In progress <span class="count" id="cDoing">0</span></div><div id="colDoing"></div></div>
+        <div class="col"><div class="col-h">Done <span class="count" id="cDone">0</span></div><div id="colDone"></div></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div id="tab-announcements" class="hidden">
+      <div id="annFormWrap">
+        <h2>Post an announcement</h2>
+        <form class="card" id="fAnn">
+          <input class="in" id="aTitle" maxlength="100" placeholder="Headline" required>
+          <textarea class="in" id="aBody" maxlength="2000" placeholder="Details" style="margin-top:10px"></textarea>
+          <label class="small mute" style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="aPin"> Pin to the top</label>
+          <button class="btn primary" style="margin-top:12px" type="submit">Post</button>
+        </form>
+      </div>
+      <h2>All announcements</h2>
+      <div class="card" id="annList"></div>
+    </div>
+
+    <!-- TEAM -->
+    <div id="tab-team" class="hidden">
+      <h2>Your profile</h2>
+      <div class="card">
+        <div class="member">
+          <div class="av lg" id="pAv"></div>
+          <div style="flex:1">
+            <div class="n" id="pName"></div>
+            <label class="l">Job title</label>
+            <div class="row" style="flex-wrap:nowrap">
+              <input class="in" id="pTitle" maxlength="40" placeholder="Job title">
+              <button class="btn sm" id="btnTitle">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h2>Team roster <span id="teamCount"></span></h2>
+      <div class="grid g2" id="teamList"></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* ============ FIREBASE SETTINGS ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCLGQt79zzs08XUgrzFmFlbcBfMU-wqkz8",
+  authDomain: "mainframe-hq-5097a.firebaseapp.com",
+  projectId: "mainframe-hq-5097a",
+  storageBucket: "mainframe-hq-5097a.firebasestorage.app",
+  messagingSenderId: "922166206069",
+  appId: "1:922166206069:web:25009e5830bd74a58f623c"
+};
+const OWNER_HASH = "bc13869221c81b109a44d61e79aed3dfb9f21cd8ff7667732dad1a9d6f8841a4"; // scrambled owner email (only this person can post announcements)
+/* =========================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDoc, runTransaction, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+const STATES = {working:"Working",available:"Available",away:"Away",offline:"Offline"};
+const COLS = [["todo","To do"],["doing","In progress"],["done","Done"]];
+const REAL_DOMAINS=["gmail.com","googlemail.com","icloud.com","me.com","mac.com","outlook.com","hotmail.com","live.com","msn.com","yahoo.com","ymail.com","aol.com","proton.me","protonmail.com","zoho.com","gmx.com","mail.com"];
+
+let auth, db, uid=null, myEmail="", canAdmin=false;
+let me=null, members={}, tasks=[], anns=[];
+let tab="overview", filterWho="all", unsubs=[], appStarted=false;
+
+function h(tag, attrs, ...kids){
+  const el=document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    if(k==="class") el.className=attrs[k];
+    else if(k==="text") el.textContent=attrs[k];
+    else if(k.startsWith("on")) el.addEventListener(k.slice(2),attrs[k]);
+    else el.setAttribute(k,attrs[k]);
+  }
+  for(const c of kids){ if(c==null) continue; el.append(c.nodeType?c:document.createTextNode(String(c))); }
+  return el;
+}
+function show(id){ for(const s of ["scrLoading","scrSetup","scrSignin","scrUsername","scrApp"]) $(s).classList.toggle("hidden",s!==id); }
+let toastT; function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+function str(v,max){ return typeof v==="string"? v.slice(0,max||500):""; }
+function nameOf(id){ if(!id) return "Unassigned"; const m=members[id]; return m&&m.username? "@"+m.username : "Former member"; }
+function initial(id){ const m=members[id]; return m&&m.username? m.username[0] : "?"; }
+function ago(t){
+  if(!t) return ""; const d=(Date.now()-t)/1000;
+  if(d<60) return "just now"; if(d<3600) return Math.floor(d/60)+"m ago"; if(d<86400) return Math.floor(d/3600)+"h ago";
+  return new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+}
+function fmtDue(s){ if(!s) return ""; const d=new Date(s+"T00:00:00"); return isNaN(d)?"":d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+function isLate(s){ if(!s) return false; return new Date(s+"T23:59:59")<new Date(); }
+function failWrite(e){
+  if(e&&e.code==="permission-denied") toast("You don't have permission to do that");
+  else toast("Couldn't save. Try again.");
+}
+function emailProblem(v){
+  if(!v) return "Enter your email.";
+  const m=/^[a-z0-9._%+-]+@([a-z0-9-]+(\.[a-z0-9-]+)+)$/.exec(v);
+  if(!m || !REAL_DOMAINS.includes(m[1])) return "This is not a real email. Enter a real one.";
+  return "";
+}
+
+/* ---------- boot ---------- */
+if(firebaseConfig.apiKey==="PASTE_HERE"){ show("scrSetup"); }
+else{
+  const app=initializeApp(firebaseConfig);
+  auth=getAuth(app); db=getFirestore(app);
+  onAuthStateChanged(auth, u=>{
+    unsubs.forEach(f=>f()); unsubs=[]; appStarted=false; me=null;
+    if(!u){ uid=null; show("scrSignin"); return; }
+    uid=u.uid; myEmail=(u.email||"").toLowerCase();
+    canAdmin=false;
+    show("scrLoading");
+    crypto.subtle.digest("SHA-256",new TextEncoder().encode(myEmail)).then(b=>{
+      canAdmin=[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")===OWNER_HASH;
+      if(appStarted){ $("annFormWrap").classList.toggle("hidden",!canAdmin); ensureHeadCoder(); renderAll(); }
+    });
+    unsubs.push(onSnapshot(doc(db,"members",uid), snap=>{
+      if(!snap.exists()){ if(snap.metadata.fromCache) return; show("scrUsername"); return; }
+      me=snap.data();
+      if(!appStarted) startApp();
+      renderMe();
+    }, ()=>show("scrSignin")));
+  });
+}
+
+/* ---------- sign in / sign up ---------- */
+let signUp=false;
+function setMode(up){
+  signUp=up;
+  $("sHead").textContent= up? "Create your account" : "Sign in to Mainframe HQ";
+  $("sSub").textContent= up? "Join the Mainframe team." : "Team members only.";
+  $("btnSign").textContent= up? "Create account" : "Sign in";
+  $("sSwapText").textContent= up? "Already on the team?" : "New to the team?";
+  $("sSwap").textContent= up? "Sign in" : "Create an account";
+  $("sPass").setAttribute("autocomplete", up? "new-password":"current-password");
+  $("sHint").textContent= up? "Password must be at least 6 characters." : ""; $("sHint").classList.remove("err");
+}
+$("sSwap").addEventListener("click",e=>{ e.preventDefault(); setMode(!signUp); });
+$("sEmail").addEventListener("input",()=>$("sHint").classList.remove("err"));
+$("fSign").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const email=$("sEmail").value.trim().toLowerCase(), pass=$("sPass").value;
+  const hint=$("sHint"), btn=$("btnSign");
+  const err=m=>{ hint.textContent=m; hint.classList.add("err"); btn.disabled=false; };
+  const ep=emailProblem(email); if(ep) return err(ep);
+  if(pass.length<6) return err("Password must be at least 6 characters.");
+  btn.disabled=true; hint.classList.remove("err"); hint.textContent= signUp? "Creating account..." : "Signing in...";
+  try{
+    if(signUp) await createUserWithEmailAndPassword(auth,email,pass);
+    else await signInWithEmailAndPassword(auth,email,pass);
+    btn.disabled=false; hint.textContent=""; $("sPass").value="";
+  }catch(ex){
+    const c=ex&&ex.code||"";
+    if(c==="auth/email-already-in-use") err("That email already has an account. Sign in instead.");
+    else if(c==="auth/invalid-credential"||c==="auth/wrong-password"||c==="auth/user-not-found") err("Wrong email or password.");
+    else if(c==="auth/weak-password") err("Pick a stronger password.");
+    else if(c==="auth/too-many-requests") err("Too many tries. Wait a minute and try again.");
+    else err("Something went wrong. Try again.");
+  }
+});
+$("btnOut").addEventListener("click",()=>signOut(auth));
+
+/* ---------- email link sign-in ---------- */
+const pageUrl=()=>location.origin+location.pathname;
+$("btnLink").addEventListener("click",async()=>{
+  const email=$("sEmail").value.trim().toLowerCase();
+  const hint=$("sHint"), btn=$("btnLink");
+  const err=m=>{ hint.textContent=m; hint.classList.add("err"); btn.disabled=false; };
+  const ep=emailProblem(email); if(ep) return err(ep);
+  btn.disabled=true; hint.classList.remove("err"); hint.textContent="Sending...";
+  try{
+    await sendSignInLinkToEmail(auth,email,{url:pageUrl(),handleCodeInApp:true});
+    try{ localStorage.setItem("hqLinkEmail",email); }catch(e){}
+    hint.textContent="Link sent. Check your email (and spam) and tap the link on this device.";
+    btn.disabled=false;
+  }catch(ex){
+    if(ex&&ex.code==="auth/too-many-requests") err("Too many tries. Wait a minute and try again.");
+    else err("Couldn't send the link. Try again.");
+  }
+});
+async function finishLinkSignIn(){
+  if(!isSignInWithEmailLink(auth,location.href)) return;
+  let email=""; try{ email=localStorage.getItem("hqLinkEmail")||""; }catch(e){}
+  const hint=$("sHint");
+  if(!email){
+    show("scrSignin");
+    hint.textContent="Enter your email, then tap Sign in to finish."; hint.classList.remove("err");
+    $("fSign").addEventListener("submit",async ev=>{
+      if(!isSignInWithEmailLink(auth,location.href)) return;
+      ev.stopImmediatePropagation(); ev.preventDefault();
+      try{ await signInWithEmailLink(auth,$("sEmail").value.trim().toLowerCase(),location.href); history.replaceState(null,"",pageUrl()); }
+      catch(e){ hint.textContent="That link didn't work. Send a new one."; hint.classList.add("err"); history.replaceState(null,"",pageUrl()); }
+    },{capture:true,once:true});
+    return;
+  }
+  try{ await signInWithEmailLink(auth,email,location.href); try{ localStorage.removeItem("hqLinkEmail"); }catch(e){} }
+  catch(e){ hint.textContent="That link expired or was already used. Send a new one."; hint.classList.add("err"); }
+  history.replaceState(null,"",pageUrl());
+}
+if(auth) finishLinkSignIn();
+
+/* ---------- username ---------- */
+$("inUser").addEventListener("input",e=>{
+  e.target.value=e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,"");
+  const hint=$("userHint"); hint.classList.remove("err"); hint.textContent="3 to 20 characters: letters, numbers and underscores.";
+});
+$("fUser").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const name=$("inUser").value.trim(), title=$("inTitle").value.trim().slice(0,40);
+  const hint=$("userHint"), btn=$("btnUser");
+  const err=m=>{ hint.textContent=m; hint.classList.add("err"); btn.disabled=false; };
+  if(!/^[a-z0-9_]{3,20}$/.test(name)) return err("Use 3 to 20 letters, numbers or underscores.");
+  btn.disabled=true; hint.classList.remove("err"); hint.textContent="Checking...";
+  try{
+    await runTransaction(db, async tx=>{
+      const ref=doc(db,"usernames",name); const cur=await tx.get(ref);
+      if(cur.exists() && cur.data().uid!==uid) throw {code:"taken"};
+      tx.set(ref,{uid,at:Date.now()});
+      tx.set(doc(db,"members",uid),{username:name,title,focus:"",state:"available",joinedAt:Date.now(),updatedAt:Date.now()});
+    });
+    btn.disabled=false;
+  }catch(ex){
+    if(ex&&ex.code==="taken") err("That username is taken.");
+    else err("Couldn't create your username. Try again.");
+  }
+});
+
+/* ---------- app ---------- */
+let staleTimer;
+async function ensureHeadCoder(){
+  if(!canAdmin) return;
+  try{
+    const ref=doc(db,"members","anonymous");
+    if(!(await getDoc(ref)).exists()){
+      await setDoc(doc(db,"usernames","anonymous"),{uid:"anonymous",at:Date.now()});
+      await setDoc(ref,{username:"anonymous",title:"Head Coder",focus:"Building Mainframe Headquarters",state:"working",joinedAt:Date.now(),updatedAt:Date.now()});
+      await addDoc(collection(db,"announcements"),{title:"Welcome to Mainframe HQ",body:"This is the team's home base. Post tasks, check announcements, and set your status so everyone knows what you're working on.",pinned:true,author:"anonymous",createdAt:Date.now()});
+    }
+  }catch(e){}
+}
+function startApp(){
+  appStarted=true;
+  show("scrApp");
+  staleTimer=setTimeout(()=>$("staleNote").classList.remove("hidden"),10000);
+  const fresh=s=>{ if(!s.metadata.fromCache){ clearTimeout(staleTimer); $("staleNote").classList.add("hidden"); } };
+  unsubs.push(onSnapshot(collection(db,"members"), s=>{
+    fresh(s); members={};
+    s.docs.forEach(d=>{ const v=d.data(); members[d.id]={username:str(v.username,20),title:str(v.title,40),focus:str(v.focus,120),state:STATES[v.state]?v.state:"offline",updatedAt:+v.updatedAt||0}; });
+    renderAll();
+  },()=>{}));
+  unsubs.push(onSnapshot(query(collection(db,"tasks"),orderBy("createdAt","desc")), s=>{
+    fresh(s);
+    tasks=s.docs.map(d=>{ const v=d.data(); return {id:d.id,title:str(v.title,140),project:str(v.project,40),assignee:str(v.assignee,200),status:["todo","doing","done"].includes(v.status)?v.status:"todo",due:str(v.due,10),createdBy:str(v.createdBy,200),createdAt:+v.createdAt||0}; });
+    renderAll();
+  },()=>{}));
+  unsubs.push(onSnapshot(query(collection(db,"announcements"),orderBy("createdAt","desc"),limit(100)), s=>{
+    fresh(s);
+    anns=s.docs.map(d=>{ const v=d.data(); return {id:d.id,title:str(v.title,100),body:str(v.body,2000),pinned:!!v.pinned,author:str(v.author,200),createdAt:+v.createdAt||0}; });
+    renderAll();
+  },()=>{}));
+  $("annFormWrap").classList.toggle("hidden",!canAdmin);
+  ensureHeadCoder();
+  renderAll();
+}
+
+$("tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  tab=b.dataset.tab;
+  [...$("tabs").children].forEach(x=>x.classList.toggle("on",x===b));
+  for(const t of ["overview","tasks","announcements","team"]) $("tab-"+t).classList.toggle("hidden",t!==tab);
+  window.scrollTo(0,0);
+});
+
+function renderMe(){
+  if(!me) return;
+  const n="@"+str(me.username,20);
+  $("meName").textContent=n; $("meAv").textContent=str(me.username,1);
+  $("welcomeName").textContent=n; $("pName").textContent=n; $("pAv").textContent=str(me.username,1);
+  [...$("mySeg").children].forEach(b=>b.classList.toggle("on",b.dataset.s===me.state));
+  if(document.activeElement!==$("myFocus")) $("myFocus").value=str(me.focus,120);
+  if(document.activeElement!==$("pTitle")) $("pTitle").value=str(me.title,40);
+}
+let meWriting=false;
+async function updateMe(patch){
+  if(meWriting) return; meWriting=true;
+  try{ await updateDoc(doc(db,"members",uid),{...patch,updatedAt:Date.now()}); toast("Saved"); }
+  catch(e){ failWrite(e); }
+  meWriting=false;
+}
+$("mySeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!me||b.dataset.s===me.state) return; updateMe({state:b.dataset.s}); });
+$("btnFocus").addEventListener("click",()=>{ const v=$("myFocus").value.trim().slice(0,120); if(me&&v!==me.focus) updateMe({focus:v,state:v?"working":me.state}); });
+$("myFocus").addEventListener("keydown",e=>{ if(e.key==="Enter") $("btnFocus").click(); });
+$("btnTitle").addEventListener("click",()=>{ const v=$("pTitle").value.trim().slice(0,40); if(me&&v!==me.title) updateMe({title:v}); });
+
+$("fTask").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const title=$("tTitle").value.trim(); if(!title) return;
+  const data={title:title.slice(0,140),project:$("tProj").value.trim().slice(0,40),assignee:$("tWho").value||"",status:"todo",due:$("tDue").value||"",createdBy:uid,createdAt:Date.now()};
+  try{ await addDoc(collection(db,"tasks"),data); $("fTask").reset(); toast("Task added"); }catch(ex){ failWrite(ex); }
+});
+const busy=new Set();
+async function taskWrite(id,fn){
+  if(busy.has(id)) return; busy.add(id);
+  try{ await fn(doc(db,"tasks",id)); }catch(e){ failWrite(e); }
+  busy.delete(id);
+}
+$("filterWho").addEventListener("change",e=>{ filterWho=e.target.value; renderTasks(); });
+
+$("fAnn").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const title=$("aTitle").value.trim(); if(!title) return;
+  try{ await addDoc(collection(db,"announcements"),{title:title.slice(0,100),body:$("aBody").value.trim().slice(0,2000),pinned:$("aPin").checked,author:uid,createdAt:Date.now()}); $("fAnn").reset(); toast("Posted"); }
+  catch(ex){ failWrite(ex); }
+});
+const annBusy=new Set();
+async function annWrite(id,fn){ if(annBusy.has(id)) return; annBusy.add(id); try{ await fn(doc(db,"announcements",id)); }catch(e){ failWrite(e); } annBusy.delete(id); }
+
+/* ---------- render ---------- */
+function memberIds(){ return Object.keys(members).filter(id=>members[id].username).sort((a,b)=>members[a].username.localeCompare(members[b].username)); }
+function renderAll(){ renderMe(); renderStats(); renderOverview(); renderTasks(); renderAnns(); renderTeam(); renderSelects(); }
+function renderStats(){ const c={todo:0,doing:0,done:0}; tasks.forEach(t=>c[t.status]++); $("stTodo").textContent=c.todo; $("stDoing").textContent=c.doing; $("stDone").textContent=c.done; }
+function renderSelects(){
+  const ids=memberIds();
+  const w=$("tWho"), cur=w.value; w.replaceChildren(h("option",{value:"",text:"Unassigned"}), ...ids.map(id=>h("option",{value:id,text:nameOf(id)+(id===uid?" (you)":"")})));
+  w.value=ids.includes(cur)?cur:"";
+  const f=$("filterWho"); f.replaceChildren(h("option",{value:"all",text:"Everyone's tasks"}),h("option",{value:uid,text:"My tasks"}),h("option",{value:"",text:"Unassigned"}), ...ids.filter(i=>i!==uid).map(id=>h("option",{value:id,text:nameOf(id)})));
+  f.value=filterWho;
+}
+function sortedAnns(){ return [...anns].sort((a,b)=>(b.pinned-a.pinned)||(b.createdAt-a.createdAt)); }
+function annEl(a,full){
+  return h("div",{class:"ann"},
+    a.pinned? h("div",{class:"pin",text:"Pinned"}):null,
+    h("h3",{text:a.title}),
+    a.body? h("p",{text:full? a.body : (a.body.length>220? a.body.slice(0,220)+"...":a.body)}):null,
+    h("div",{class:"meta"}, h("div",{class:"av",style:"width:20px;height:20px;font-size:10px",text:initial(a.author)}), nameOf(a.author)+" · "+ago(a.createdAt),
+      full&&canAdmin? h("span",{style:"margin-left:auto;display:flex;gap:4px"},
+        h("button",{class:"x",text:a.pinned?"Unpin":"Pin",onclick:()=>annWrite(a.id,r=>updateDoc(r,{pinned:!a.pinned}))}),
+        h("button",{class:"x",text:"Delete",onclick:()=>annWrite(a.id,r=>deleteDoc(r))})):null));
+}
+function renderOverview(){
+  const a=sortedAnns()[0];
+  $("ovAnn").replaceChildren(a? annEl(a,false) : h("div",{class:"empty",text:"No announcements yet."}));
+  const mine=tasks.filter(t=>t.assignee===uid&&t.status!=="done");
+  $("ovTasks").replaceChildren(...(mine.length? mine.slice(0,5).map(t=>h("div",{style:"display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"},
+      h("span",{text:t.title,style:"font-weight:500"}), h("span",{class:"small mute",text:t.status==="doing"?"In progress":"To do"})))
+    : [h("div",{class:"empty",text:"Nothing assigned to you."})]));
+  const ids=memberIds();
+  $("ovTeam").replaceChildren(...(ids.length? ids.map(memberCard):[h("div",{class:"empty",text:"No one has joined yet."})]));
+}
+function memberCard(id){
+  const m=members[id];
+  const active=tasks.filter(t=>t.assignee===id&&t.status==="doing").length;
+  return h("div",{class:"card member"},
+    h("div",{class:"av lg",text:m.username[0]}),
+    h("div",{style:"flex:1;min-width:0"},
+      h("div",{class:"n",text:"@"+m.username+(id===uid?" (you)":"")}),
+      m.title? h("div",{class:"ti",text:m.title}):null,
+      h("div",{class:"f",text:m.focus||"No current focus set"}),
+      h("div",{class:"st"}, h("span",{class:"dot s-"+m.state}), STATES[m.state], m.updatedAt? " · updated "+ago(m.updatedAt):"", active? " · "+active+" in progress":"")));
+}
+function taskEl(t){
+  const canDel=t.createdBy===uid||canAdmin;
+  const moves=[];
+  if(t.status!=="todo") moves.push(h("button",{class:"btn sm",text:t.status==="done"?"Reopen":"Back",onclick:()=>taskWrite(t.id,r=>updateDoc(r,{status:t.status==="done"?"doing":"todo"}))}));
+  if(t.status==="todo") moves.push(h("button",{class:"btn sm primary",text:"Start",onclick:()=>taskWrite(t.id,r=>updateDoc(r,t.assignee?{status:"doing"}:{status:"doing",assignee:uid}))}));
+  if(t.status==="doing") moves.push(h("button",{class:"btn sm primary",text:"Done",onclick:()=>taskWrite(t.id,r=>updateDoc(r,{status:"done"}))}));
+  if(!t.assignee&&t.status!=="done") moves.push(h("button",{class:"btn sm",text:"Take it",onclick:()=>taskWrite(t.id,r=>updateDoc(r,{assignee:uid}))}));
+  return h("div",{class:"task"},
+    h("div",{style:"display:flex;gap:8px;justify-content:space-between"}, h("div",{class:"t",text:t.title}), canDel? h("button",{class:"x",text:"Delete",onclick:()=>taskWrite(t.id,r=>deleteDoc(r))}):null),
+    h("div",{class:"tags"},
+      t.project? h("span",{class:"tag proj",text:t.project}):null,
+      h("span",{class:"tag",text:nameOf(t.assignee)}),
+      t.due? h("span",{class:"tag"+(isLate(t.due)&&t.status!=="done"?" late":""),text:"Due "+fmtDue(t.due)}):null),
+    h("div",{class:"tact"},...moves));
+}
+function renderTasks(){
+  const list=tasks.filter(t=>filterWho==="all"||t.assignee===filterWho);
+  const map={todo:$("colTodo"),doing:$("colDoing"),done:$("colDone")}, cnt={todo:$("cTodo"),doing:$("cDoing"),done:$("cDone")};
+  for(const [k] of COLS){ const ts=list.filter(t=>t.status===k); cnt[k].textContent=ts.length; map[k].replaceChildren(...(ts.length? ts.map(taskEl):[h("div",{class:"empty",text:"Empty"})])); }
+}
+function renderAnns(){ const s=sortedAnns(); $("annList").replaceChildren(...(s.length? s.map(a=>annEl(a,true)):[h("div",{class:"empty",text:"No announcements yet."})])); }
+function renderTeam(){ const ids=memberIds(); $("teamCount").textContent="("+ids.length+")"; $("teamList").replaceChildren(...(ids.length? ids.map(memberCard):[h("div",{class:"empty",text:"No one has joined yet."})])); }
+setInterval(()=>{ if(appStarted){ renderOverview(); renderTeam(); renderAnns(); } },60000);
+</script>
+</body>
+</html>
