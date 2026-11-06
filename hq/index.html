@@ -406,7 +406,7 @@ function setStep(n){
     $("sPassLabel").textContent= signUp? "New Mainframe HQ password" : "Mainframe HQ password";
     $("sPass").placeholder= signUp? "Make a password" : "Password";
     $("sPass").setAttribute("autocomplete", signUp? "new-password":"current-password");
-    $("sHint").textContent= signUp? "Don't use your email password. At least 6 characters." : "";
+    $("sHint").textContent= signUp? "At least 6 characters." : "";
     $("btnSign").textContent= signUp? "Create account" : "Sign in";
     setTimeout(()=>$("sPass").focus(),50);
   }
