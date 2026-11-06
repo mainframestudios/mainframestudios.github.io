@@ -145,11 +145,17 @@ label.l{display:block;font-size:12px;color:var(--mute);margin:10px 0 5px}
     <h1 id="sHead">Sign in to Mainframe HQ</h1>
     <p id="sSub">Team members only.</p>
     <form id="fSign">
-      <div class="field"><input id="sEmail" type="email" maxlength="80" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Email"></div>
-      <div class="field"><input id="sPass" type="password" maxlength="64" autocomplete="current-password" placeholder="Password"></div>
+      <div id="step1">
+        <div class="field"><input id="sEmail" type="email" maxlength="80" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Email"></div>
+      </div>
+      <div id="step2" class="hidden">
+        <div class="google-note" style="margin-bottom:12px;justify-content:space-between"><span id="sEmailShow" style="color:var(--text);word-break:break-all"></span><a href="#" id="sBack" style="color:var(--b);font-weight:600;flex:none">Change</a></div>
+        <label class="l" id="sPassLabel" style="text-align:left">Password</label>
+        <div class="field"><input id="sPass" type="password" maxlength="64" autocomplete="current-password" placeholder="Password"></div>
+      </div>
       <div id="sHint" class="hint"></div>
-      <button class="btn primary block" id="btnSign" type="submit">Sign in</button>
-      <button class="btn block" id="btnLink" type="button" style="margin-top:10px">Email me a sign-in link instead</button>
+      <button class="btn primary block" id="btnSign" type="submit">Continue</button>
+      <button class="btn block hidden" id="btnLink" type="button" style="margin-top:10px">Email me a sign-in link instead</button>
     </form>
     <p class="small mute" style="margin:16px 0 0"><span id="sSwapText">New to the team?</span> <a href="#" id="sSwap" style="color:var(--b);font-weight:600">Create an account</a></p>
   </div>
@@ -380,35 +386,57 @@ else{
 }
 
 /* ---------- sign in / sign up ---------- */
-let signUp=false;
+let signUp=false, step=1;
+function setStep(n){
+  step=n;
+  $("step1").classList.toggle("hidden",n!==1);
+  $("step2").classList.toggle("hidden",n!==2);
+  $("btnLink").classList.toggle("hidden",n!==2);
+  $("sHint").classList.remove("err");
+  if(n===1){
+    $("btnSign").textContent="Continue";
+    $("sHint").textContent="";
+    $("sHead").textContent= signUp? "Create your account" : "Sign in to Mainframe HQ";
+    $("sSub").textContent= signUp? "Join the Mainframe team." : "Team members only.";
+  }else{
+    $("sEmailShow").textContent=$("sEmail").value.trim().toLowerCase();
+    $("sPass").value="";
+    $("sHead").textContent= signUp? "Make a password" : "Enter your password";
+    $("sSub").textContent= signUp? "Create a new password just for Mainframe HQ." : "Use the password you made for Mainframe HQ.";
+    $("sPassLabel").textContent= signUp? "New Mainframe HQ password" : "Mainframe HQ password";
+    $("sPass").placeholder= signUp? "Make a password" : "Password";
+    $("sPass").setAttribute("autocomplete", signUp? "new-password":"current-password");
+    $("sHint").textContent= signUp? "Don't use your email password. At least 6 characters." : "";
+    $("btnSign").textContent= signUp? "Create account" : "Sign in";
+    setTimeout(()=>$("sPass").focus(),50);
+  }
+}
 function setMode(up){
   signUp=up;
-  $("sHead").textContent= up? "Create your account" : "Sign in to Mainframe HQ";
-  $("sSub").textContent= up? "Join the Mainframe team." : "Team members only.";
-  $("btnSign").textContent= up? "Create account" : "Sign in";
   $("sSwapText").textContent= up? "Already on the team?" : "New to the team?";
   $("sSwap").textContent= up? "Sign in" : "Create an account";
-  $("sPass").setAttribute("autocomplete", up? "new-password":"current-password");
-  $("sHint").textContent= up? "Password must be at least 6 characters." : ""; $("sHint").classList.remove("err");
+  setStep(step);
 }
 $("sSwap").addEventListener("click",e=>{ e.preventDefault(); setMode(!signUp); });
+$("sBack").addEventListener("click",e=>{ e.preventDefault(); setStep(1); });
 $("sEmail").addEventListener("input",()=>$("sHint").classList.remove("err"));
 $("fSign").addEventListener("submit",async e=>{
   e.preventDefault();
   const email=$("sEmail").value.trim().toLowerCase(), pass=$("sPass").value;
   const hint=$("sHint"), btn=$("btnSign");
   const err=m=>{ hint.textContent=m; hint.classList.add("err"); btn.disabled=false; };
-  const ep=emailProblem(email); if(ep) return err(ep);
+  const ep=emailProblem(email); if(ep){ if(step!==1) setStep(1); return err(ep); }
+  if(step===1){ setStep(2); return; }
   if(pass.length<6) return err("Password must be at least 6 characters.");
   btn.disabled=true; hint.classList.remove("err"); hint.textContent= signUp? "Creating account..." : "Signing in...";
   try{
     if(signUp) await createUserWithEmailAndPassword(auth,email,pass);
     else await signInWithEmailAndPassword(auth,email,pass);
-    btn.disabled=false; hint.textContent=""; $("sPass").value="";
+    btn.disabled=false; hint.textContent=""; $("sPass").value=""; setStep(1);
   }catch(ex){
     const c=ex&&ex.code||"";
-    if(c==="auth/email-already-in-use") err("That email already has an account. Sign in instead.");
-    else if(c==="auth/invalid-credential"||c==="auth/wrong-password"||c==="auth/user-not-found") err("Wrong email or password.");
+    if(c==="auth/email-already-in-use") err("That email already has an account. Tap Sign in below.");
+    else if(c==="auth/invalid-credential"||c==="auth/wrong-password"||c==="auth/user-not-found") err(signUp? "Something went wrong. Try again." : "Wrong password, or no account yet. New? Tap Create an account below.");
     else if(c==="auth/weak-password") err("Pick a stronger password.");
     else if(c==="auth/too-many-requests") err("Too many tries. Wait a minute and try again.");
     else err("Something went wrong. Try again.");
