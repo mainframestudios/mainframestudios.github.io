@@ -389,9 +389,11 @@ function ago(t){
 function fmtDue(s){ if(!s) return ""; const d=new Date(s+"T00:00:00"); return isNaN(d)?"":d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
 function isLate(s){ if(!s) return false; return new Date(s+"T23:59:59")<new Date(); }
 function failWrite(e){
-  if(e&&e.code==="permission-denied") toast("You don't have permission to do that");
-  else toast("Couldn't save. Try again.");
+  const c=(e&&e.code)||"unknown";
+  if(c==="permission-denied") toast("Not allowed (permission-denied)");
+  else toast("Couldn't save ("+c+")");
 }
+function failRead(what){ return e=>{ const c=(e&&e.code)||"unknown"; $("staleNote").textContent="Couldn't load "+what+" ("+c+")."; $("staleNote").classList.remove("hidden"); }; }
 function emailProblem(v){
   if(!v) return "Enter your email.";
   const m=/^[a-z0-9._%+-]+@([a-z0-9-]+(\.[a-z0-9-]+)+)$/.exec(v);
@@ -656,7 +658,7 @@ function startApp(){
     fresh(s); members={};
     s.docs.forEach(d=>{ const v=d.data(); members[d.id]={username:str(v.username,20),title:str(v.title,40),focus:str(v.focus,120),state:STATES[v.state]?v.state:"offline",updatedAt:+v.updatedAt||0,manualUntil:+v.manualUntil||0}; });
     renderAll();
-  },()=>{}));
+  },failRead("team")));
   unsubs.push(onSnapshot(query(collection(db,"tasks"),orderBy("createdAt","desc")), s=>{
     fresh(s);
     tasks=s.docs.map(d=>{ const v=d.data(); return {id:d.id,title:str(v.title,140),project:str(v.project,40),assignee:str(v.assignee,200),status:["todo","doing","done"].includes(v.status)?v.status:"todo",due:str(v.due,10),createdBy:str(v.createdBy,200),createdAt:+v.createdAt||0}; });
@@ -666,7 +668,7 @@ function startApp(){
     fresh(s);
     anns=s.docs.map(d=>{ const v=d.data(); return {id:d.id,title:str(v.title,100),body:str(v.body,2000),pinned:!!v.pinned,author:str(v.author,200),createdAt:+v.createdAt||0}; });
     renderAll();
-  },()=>{}));
+  },failRead("announcements")));
   $("annFormWrap").classList.toggle("hidden",!canAdmin);
   ensureHeadCoder();
   renderAll();
@@ -726,8 +728,10 @@ $("filterWho").addEventListener("change",e=>{ filterWho=e.target.value; renderTa
 $("fAnn").addEventListener("submit",async e=>{
   e.preventDefault();
   const title=$("aTitle").value.trim(); if(!title) return;
+  const b=$("fAnn").querySelector("button[type=submit]"); b.disabled=true; b.textContent="Posting...";
   try{ await addDoc(collection(db,"announcements"),{title:title.slice(0,100),body:$("aBody").value.trim().slice(0,2000),pinned:$("aPin").checked,author:uid,createdAt:Date.now()}); $("fAnn").reset(); toast("Posted"); }
   catch(ex){ failWrite(ex); }
+  b.disabled=false; b.textContent="Post";
 });
 const annBusy=new Set();
 async function annWrite(id,fn){ if(annBusy.has(id)) return; annBusy.add(id); try{ await fn(doc(db,"announcements",id)); }catch(e){ failWrite(e); } annBusy.delete(id); }
