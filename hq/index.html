@@ -691,11 +691,17 @@ function renderMe(){
   if(document.activeElement!==$("myFocus")) $("myFocus").value=str(me.focus,120);
   if(document.activeElement!==$("pTitle")) $("pTitle").value=str(me.title,40);
 }
-let meWriting=false;
+let meWriting=false, mePending=null;
 async function updateMe(patch){
-  if(meWriting) return; meWriting=true;
-  try{ await updateDoc(doc(db,"members",uid),{...patch,updatedAt:Date.now()}); toast("Saved"); }
-  catch(e){ failWrite(e); }
+  if(me) { me=Object.assign({},me,patch); renderMe(); }   // show it right away
+  mePending=Object.assign(mePending||{},patch);
+  if(meWriting) return;
+  meWriting=true;
+  while(mePending){
+    const p=mePending; mePending=null;
+    try{ await updateDoc(doc(db,"members",uid),{...p,updatedAt:Date.now()}); toast("Saved"); }
+    catch(e){ failWrite(e); }
+  }
   meWriting=false;
 }
 $("mySeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!me||b.dataset.s===me.state) return; updateMe({state:b.dataset.s}); });
