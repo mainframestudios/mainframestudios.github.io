@@ -636,6 +636,9 @@ function renderOverview(){
   $("ovTeam").replaceChildren(...(ids.length? ids.map(memberCard):[h("div",{class:"empty",text:"No one has joined yet."})]));
 }
 /* head coder status: changes on its own every 1 to 2 days (same for everyone) */
+const ANON_WORK=["Fixing bugs in Game Crate","Coding new levels for Tower Brawl","Speeding up the studio website","Polishing Pinecrest Rivals","Adding new targets to Target Blast","Upgrading Mainframe HQ","Testing Game Crate on computers","Cleaning up old code","Working on a secret new game","Making the games load faster"];
+const ANON_FREE=["Free to help with anything","Open for questions","Reviewing the task board","Ready for the next project","Checking in on the team's tasks"];
+const ANON_AWAY=["Away from the desk","Back soon","Taking a break","Out for the day"];
 function rnd(n){ n=(n^0x9e3779b9)>>>0; n=Math.imul(n^(n>>>16),0x85ebca6b)>>>0; n=Math.imul(n^(n>>>13),0xc2b2ae35)>>>0; return ((n^(n>>>16))>>>0)/4294967296; }
 function anonAuto(now){
   const DAY=86400000; let start=Date.UTC(2026,10,6,12), prev="", i=0, state="available";
@@ -643,14 +646,20 @@ function anonAuto(now){
     const len=(rnd(i*2+1)<0.5?1:2)*DAY;
     const r=rnd(i*2+2), opts=["working","available","away"].filter(x=>x!==prev);
     state= i===0? "available" : opts[r<0.6?0:1];
-    if(now<start+len) return {state,start,end:start+len};
+    if(now<start+len){
+      const pick=a=>a[Math.floor(rnd(i*7+5)*a.length)];
+      const focus= state==="working"? pick(ANON_WORK) : state==="available"? pick(ANON_FREE) : pick(ANON_AWAY);
+      return {state,focus,start,end:start+len};
+    }
     prev=state; start+=len; i++;
   }
 }
 function eff(id){
   const m=members[id];
-  if(id!=="anonymous"||m.manualUntil>Date.now()) return {state:m.state,updatedAt:m.updatedAt};
-  const a=anonAuto(Date.now()); return {state:a.state,updatedAt:a.start};
+  if(id!=="anonymous") return {state:m.state,updatedAt:m.updatedAt};
+  const a=anonAuto(Date.now());
+  if(m.manualUntil>Date.now()) return {state:m.state,updatedAt:m.updatedAt,focus:a.focus};
+  return {state:a.state,updatedAt:a.start,focus:a.focus};
 }
 function memberCard(id){
   const m=Object.assign({},members[id],eff(id));
