@@ -152,6 +152,7 @@ label.l{display:block;font-size:12px;color:var(--mute);margin:10px 0 5px}
         <div class="google-note" style="margin-bottom:12px;justify-content:space-between"><span id="sEmailShow" style="color:var(--text);word-break:break-all"></span><a href="#" id="sBack" style="color:var(--b);font-weight:600;flex:none">Change</a></div>
         <label class="l" id="sPassLabel" style="text-align:left">Password</label>
         <div class="field"><input id="sPass" type="password" maxlength="64" autocomplete="current-password" placeholder="Password"></div>
+        <div style="text-align:left;margin:-2px 0 6px"><a href="#" id="sForgot" class="small" style="color:var(--b);font-weight:600">Forgot your password, or never made one?</a></div>
       </div>
       <div id="sHint" class="hint"></div>
       <button class="btn primary block" id="btnSign" type="submit">Continue</button>
@@ -293,6 +294,14 @@ label.l{display:block;font-size:12px;color:var(--mute);margin:10px 0 5px}
           </div>
         </div>
       </div>
+      <h2>Your password</h2>
+      <div class="card">
+        <label class="l" style="margin-top:0">Make or change your Mainframe HQ password</label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input class="in" id="newPass" type="password" maxlength="64" autocomplete="new-password" placeholder="New password (6+ characters)">
+          <button class="btn sm primary" id="btnPass">Save</button>
+        </div>
+      </div>
       <h2>Team roster <span id="teamCount"></span></h2>
       <div class="grid g2" id="teamList"></div>
     </div>
@@ -315,7 +324,7 @@ const OWNER_HASH = "bc13869221c81b109a44d61e79aed3dfb9f21cd8ff7667732dad1a9d6f88
 /* =========================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDoc, runTransaction, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -408,6 +417,7 @@ function setStep(n){
     $("sPass").setAttribute("autocomplete", signUp? "new-password":"current-password");
     $("sHint").textContent= signUp? "At least 6 characters." : "";
     $("btnSign").textContent= signUp? "Create account" : "Sign in";
+    $("sForgot").parentElement.classList.toggle("hidden",signUp);
     setTimeout(()=>$("sPass").focus(),50);
   }
 }
@@ -443,6 +453,13 @@ $("fSign").addEventListener("submit",async e=>{
   }
 });
 $("btnOut").addEventListener("click",()=>signOut(auth));
+$("sForgot").addEventListener("click",async e=>{
+  e.preventDefault();
+  const email=$("sEmail").value.trim().toLowerCase(), hint=$("sHint");
+  hint.classList.remove("err"); hint.textContent="Sending...";
+  try{ await sendPasswordResetEmail(auth,email); hint.textContent="Check your email (and spam). Tap the link in it to make your password, then come back and sign in with it."; }
+  catch(ex){ hint.classList.add("err"); hint.textContent= ex&&ex.code==="auth/too-many-requests"? "Too many tries. Wait a minute and try again." : "Couldn't send it. Try again."; }
+});
 
 /* ---------- email link sign-in ---------- */
 const pageUrl=()=>location.origin+location.pathname;
@@ -578,6 +595,14 @@ async function updateMe(patch){
 $("mySeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!me||b.dataset.s===me.state) return; updateMe({state:b.dataset.s}); });
 $("btnFocus").addEventListener("click",()=>{ const v=$("myFocus").value.trim().slice(0,120); if(me&&v!==me.focus) updateMe({focus:v,state:v?"working":me.state}); });
 $("myFocus").addEventListener("keydown",e=>{ if(e.key==="Enter") $("btnFocus").click(); });
+$("btnPass").addEventListener("click",async()=>{
+  const pw=$("newPass").value;
+  if(pw.length<6){ toast("Password needs at least 6 characters"); return; }
+  $("btnPass").disabled=true;
+  try{ await updatePassword(auth.currentUser,pw); $("newPass").value=""; toast("Password saved. Use it next time you sign in."); }
+  catch(ex){ toast(ex&&ex.code==="auth/requires-recent-login"? "Sign out, sign back in, then try again" : ex&&ex.code==="auth/weak-password"? "Pick a stronger password" : "Couldn't save. Try again."); }
+  $("btnPass").disabled=false;
+});
 $("btnTitle").addEventListener("click",()=>{ const v=$("pTitle").value.trim().slice(0,40); if(me&&v!==me.title) updateMe({title:v}); });
 
 $("fTask").addEventListener("submit",async e=>{
