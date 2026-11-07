@@ -759,7 +759,7 @@ function annEl(a,full){
         h("button",{class:"x",text:"Delete",onclick:()=>annWrite(a.id,r=>deleteDoc(r))})):null));
 }
 function renderOverview(){
-  const a=sortedAnns()[0];
+  const a=[...anns].sort((x,y)=>y.createdAt-x.createdAt)[0];
   $("ovAnn").replaceChildren(a? annEl(a,false) : h("div",{class:"empty",text:"No announcements yet."}));
   const mine=tasks.filter(t=>t.assignee===uid&&t.status!=="done");
   $("ovTasks").replaceChildren(...(mine.length? mine.slice(0,5).map(t=>h("div",{style:"display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"},
