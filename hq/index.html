@@ -162,6 +162,21 @@ label.l{display:block;font-size:12px;color:var(--mute);margin:10px 0 5px}
   </div>
 </section>
 
+<!-- Reset password (from email) -->
+<section id="scrReset" class="gate hidden">
+  <div class="gate-card">
+    <div class="logo"><span>M</span></div>
+    <h1 id="rHead">Make your password</h1>
+    <p id="rSub">For <b id="rEmail" style="color:var(--text)"></b></p>
+    <form id="fReset">
+      <div class="field"><input id="rPass" type="password" maxlength="64" autocomplete="new-password" placeholder="New password"></div>
+      <div id="rHint" class="hint">At least 6 characters.</div>
+      <button class="btn primary block" id="btnReset" type="submit">Save password</button>
+    </form>
+    <button class="btn primary block hidden" id="btnResetDone" type="button">Sign in</button>
+  </div>
+</section>
+
 <!-- Make a password (after link sign-in) -->
 <section id="scrPass" class="gate hidden">
   <div class="gate-card">
@@ -338,7 +353,7 @@ const OWNER_HASH = "bc13869221c81b109a44d61e79aed3dfb9f21cd8ff7667732dad1a9d6f88
 /* =========================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, sendPasswordResetEmail, updatePassword, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDoc, runTransaction, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -361,7 +376,7 @@ function h(tag, attrs, ...kids){
   for(const c of kids){ if(c==null) continue; el.append(c.nodeType?c:document.createTextNode(String(c))); }
   return el;
 }
-function show(id){ for(const s of ["scrLoading","scrSetup","scrSignin","scrPass","scrUsername","scrApp"]) $(s).classList.toggle("hidden",s!==id); }
+function show(id){ for(const s of ["scrLoading","scrSetup","scrSignin","scrReset","scrPass","scrUsername","scrApp"]) $(s).classList.toggle("hidden",s!==id); }
 let toastT; function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
 function str(v,max){ return typeof v==="string"? v.slice(0,max||500):""; }
 function nameOf(id){ if(!id) return "Unassigned"; const m=members[id]; return m&&m.username? "@"+m.username : "Former member"; }
@@ -385,11 +400,14 @@ function emailProblem(v){
 }
 
 /* ---------- boot ---------- */
+let resetting=false, resetCode="", resetEmail="";
 if(firebaseConfig.apiKey==="PASTE_HERE"){ show("scrSetup"); }
 else{
   const app=initializeApp(firebaseConfig);
   auth=getAuth(app); db=getFirestore(app);
+  handleReset();
   onAuthStateChanged(auth, u=>{
+    if(resetting) return;
     unsubs.forEach(f=>f()); unsubs=[]; appStarted=false; me=null;
     if(!u){ uid=null; show("scrSignin"); return; }
     if(needPass){ show("scrPass"); setTimeout(()=>$("npPass").focus(),50); return; }
@@ -415,6 +433,41 @@ function enterAs(u){
 }
 
 let needPass=false;
+/* ---------- password page from email ---------- */
+/* reset state is declared near the top */
+function handleReset(){
+  const q=new URLSearchParams(location.search);
+  if(q.get("mode")!=="resetPassword"||!q.get("oobCode")) return;
+  resetting=true; resetCode=q.get("oobCode");
+  history.replaceState(null,"",location.origin+location.pathname);
+  show("scrReset");
+  verifyPasswordResetCode(auth,resetCode).then(em=>{
+    resetEmail=em; $("rEmail").textContent=em; setTimeout(()=>$("rPass").focus(),50);
+  }).catch(()=>{
+    $("rHead").textContent="This link expired";
+    $("rSub").textContent="It was already used or it's too old. Go back and send a new one.";
+    $("fReset").classList.add("hidden"); $("btnResetDone").classList.remove("hidden");
+  });
+}
+$("fReset").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const p=$("rPass").value, hint=$("rHint"), btn=$("btnReset");
+  const err=m=>{ hint.textContent=m; hint.classList.add("err"); btn.disabled=false; };
+  if(p.length<6) return err("Password must be at least 6 characters.");
+  btn.disabled=true; hint.classList.remove("err"); hint.textContent="Saving...";
+  try{
+    await confirmPasswordReset(auth,resetCode,p);
+    try{ await signInWithEmailAndPassword(auth,resetEmail,p); }catch(x){}
+    resetting=false; toast("Password saved");
+    if(auth.currentUser) enterAs(auth.currentUser);
+    else { $("sEmail").value=resetEmail; show("scrSignin"); }
+  }catch(ex){
+    if(ex&&ex.code==="auth/weak-password") err("Pick a stronger password.");
+    else if(ex&&(ex.code==="auth/expired-action-code"||ex.code==="auth/invalid-action-code")) err("This link expired. Go back and send a new one.");
+    else err("Couldn't save your password. Try again.");
+  }
+});
+$("btnResetDone").addEventListener("click",()=>{ resetting=false; show("scrSignin"); });
 $("fPass").addEventListener("submit",async e=>{
   e.preventDefault();
   const p=$("npPass").value, hint=$("npHint"), btn=$("btnNp");
