@@ -103,7 +103,7 @@ textarea{resize:vertical;min-height:90px}
 .err{color:#e0344b;font-size:14px;margin:8px 0 0}
 .by{color:var(--mute);font-size:14px;margin:6px 0 0}
 .acct{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)}
-.tabs{display:flex;gap:8px;margin-top:14px}.tabs button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600}.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.tabs-unused{display:flex;gap:8px;margin-top:14px}.tabs button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600}.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 </style>
 </head>
 <body>
@@ -111,7 +111,7 @@ textarea{resize:vertical;min-height:90px}
   <div class="hero">
     <h1>Five Star Street <span class="st">★★★★★</span></h1>
     <p>Put your company on the street. Everyone else can stop by, rate it and leave a review.</p>
-    <div class="hrow"><button class="btn" id="addBtn">+ Add your company</button><button class="btn ghost acct" id="acctBtn">Sign in</button><div class="counts"><span><b id="nC">0</b> companies</span><span><b id="nR">0</b> reviews</span></div></div>
+    <div class="hrow"><button class="btn" id="addBtn">+ Add your company</button><button class="btn ghost acct" id="acctBtn">Set your name</button><div class="counts"><span><b id="nC">0</b> companies</span><span><b id="nR">0</b> reviews</span></div></div>
   </div>
   <svg class="street" id="street" viewBox="0 0 1200 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
   <div class="road"></div>
@@ -128,7 +128,6 @@ textarea{resize:vertical;min-height:90px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app=initializeApp({
@@ -139,14 +138,16 @@ const app=initializeApp({
   messagingSenderId:"922166206069",
   appId:"1:922166206069:web:25009e5830bd74a58f623c"
 });
-const auth=getAuth(app), fdb=getFirestore(app);
+const fdb=getFirestore(app);
 const CO="fss_companies", RV="fss_reviews";
 
 const COLORS=['#2b4bf2','#e0344b','#ff7a1a','#0aa5a5','#8a3ffc','#14172b','#d6248f','#1f9d55'];
 const CATS=['Food & drink','Games','Tech','Shop','Services','Creative','Sports','Other'];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let catF='All',me=null,myName='',companies=[],reviews=[],openId=null,draft={stars:0},addColor=COLORS[0],afterSignIn=null,authMode='in';
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let me=LS.get('fss_id');if(!me){me='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);LS.set('fss_id',me)}
+let catF='All',myName=LS.get('fss_name')||'',companies=[],reviews=[],openId=null,draft={stars:0},addColor=COLORS[0],afterSignIn=null,authMode='in';
 
 /* street drawing */
 {
@@ -202,18 +203,15 @@ function render(){
 
 function openSheet(html){$('#sheet').innerHTML=html;$('#veil').classList.add('on');$('#sheet').querySelector('input,button')?.focus()}
 function closeSheet(){$('#veil').classList.remove('on');openId=null}
-const needSignIn=then=>{if(me)return false;afterSignIn=then;renderAuth();return true};
+const needSignIn=then=>{if(myName)return false;afterSignIn=then;renderAuth();return true};
 
 function renderAuth(){
   openId=null;
-  openSheet(`<div class="shead"><h2>${authMode==='in'?'Sign in':'New account'}</h2><button class="x" data-close aria-label="Close">×</button></div>
-  <p class="by">Sign in to add your company or leave a review. Anyone can look without signing in.</p>
-  <div class="tabs"><button type="button" data-mode="in" aria-pressed="${authMode==='in'}">Sign in</button><button type="button" data-mode="up" aria-pressed="${authMode==='up'}">New account</button></div>
+  openSheet(`<div class="shead"><h2>What’s your name?</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <p class="by">This shows on your reviews and companies.</p>
   <form class="f" id="authForm">
-    ${authMode==='up'?'<label for="an">Your name</label><input id="an" maxlength="30" required autocomplete="nickname" placeholder="What people see on your reviews">':''}
-    <label for="ae">Email</label><input id="ae" type="email" required autocomplete="email">
-    <label for="ap">Password</label><input id="ap" type="password" required minlength="6" autocomplete="${authMode==='up'?'new-password':'current-password'}" placeholder="At least 6 characters">
-    <div class="row"><button class="btn" type="submit">${authMode==='in'?'Sign in':'Make my account'}</button></div>
+    <label for="an">Your name</label><input id="an" maxlength="30" required autocomplete="nickname" value="${esc(myName)}" placeholder="Your name">
+    <div class="row"><button class="btn" type="submit">Save</button></div>
     <p class="err" id="authErr"></p>
   </form>`);
 }
@@ -232,7 +230,7 @@ function renderAdd(){
 
 function renderDetail(){
   const c=companies.find(x=>x.id===openId);if(!c){closeSheet();return}
-  const {rs,avg,n}=stats(c.id);const mine=me&&rs.find(r=>r.by===me);
+  const {rs,avg,n}=stats(c.id);const mine=rs.find(r=>r.by===me);
   if(draft.for!==c.id){draft={for:c.id,stars:mine?.stars||0,text:mine?.text||''}}
   const dist=[5,4,3,2,1].map(s=>{const k=rs.filter(r=>+r.stars===s).length;return`<div class="dr"><span>${s}★</span><i><span style="width:${n?k/n*100:0}%"></span></i><em>${k}</em></div>`}).join('');
   const others=rs.filter(r=>r.by!==me).sort((a,b)=>(b.at||0)-(a.at||0));
@@ -245,7 +243,7 @@ function renderDetail(){
   <h3 style="font-size:22px">${mine?'Your review':'Rate it'}</h3>
   <div class="pick" role="radiogroup" aria-label="Stars">${[1,2,3,4,5].map(s=>`<button type="button" data-star="${s}" class="${s<=draft.stars?'on':''}" aria-label="${s} star${s>1?'s':''}" aria-checked="${s===draft.stars}" role="radio">★</button>`).join('')}</div>
   <div class="f"><label for="rt">Review <span class="cat">(optional)</span></label><textarea id="rt" maxlength="500" placeholder="What was it like?">${esc(draft.text)}</textarea></div>
-  <div class="row"><button class="btn" id="saveRev">${!me?'Sign in to post':mine?'Update review':'Post review'}</button>${mine?'<button class="btn danger" id="delRev">Delete my review</button>':''}</div>
+  <div class="row"><button class="btn" id="saveRev">${mine?'Update review':'Post review'}</button>${mine?'<button class="btn danger" id="delRev">Delete my review</button>':''}</div>
   <p class="err" id="revErr"></p>`}
   <div style="margin-top:22px">${others.length?others.map(r=>`<div class="rev"><div class="who"><span>${esc(r.byName||'Someone')}</span>${starStr(+r.stars)}</div><div class="when">${ago(r.at||Date.now())}</div>${r.text?`<p>${esc(r.text)}</p>`:''}</div>`).join(''):'<p class="cat">No reviews from other people yet.</p>'}</div>
   ${me&&c.by===me?`<div class="row"><button class="btn danger" id="delCo">Take my company off the street</button></div>`:''}`;
@@ -266,12 +264,12 @@ document.addEventListener('click',async e=>{
   const md=t.closest('[data-mode]');if(md){authMode=md.dataset.mode;renderAuth();return}
   const ch=t.closest('[data-cat]');if(ch){catF=ch.dataset.cat;render();return}
   const shop=t.closest('.shop');if(shop){openId=shop.dataset.id;draft={};openSheet('');renderDetail();return}
-  if(t.id==='acctBtn'){if(me){await signOut(auth)}else{afterSignIn=null;renderAuth()}return}
+  if(t.id==='acctBtn'){afterSignIn=null;renderAuth();return}
   if(t.id==='addBtn'){if(needSignIn(()=>renderAdd()))return;renderAdd();return}
   const sw=t.closest('[data-sw]');if(sw){addColor=sw.dataset.sw;document.querySelectorAll('[data-sw]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sw===addColor));return}
   const st=t.closest('[data-star]');if(st){draft.text=$('#rt')?.value||'';draft.stars=+st.dataset.star;renderDetail();return}
   if(t.id==='saveRev'){
-    if(!me){draft.text=($('#rt')?.value||'');const id=openId,d={...draft};needSignIn(()=>{openId=id;draft=d;openSheet('');renderDetail()});return}
+    if(!myName){draft.text=($('#rt')?.value||'');const id=openId,d={...draft};needSignIn(()=>{openId=id;draft=d;openSheet('');renderDetail()});return}
     saveReview();return}
   if(t.id==='delRev'){try{await deleteDoc(doc(fdb,RV,openId+'_'+me));draft={for:openId,stars:0,text:''}}catch(err){$('#revErr').textContent='Couldn’t delete: '+errMsg(err)}return}
   if(t.id==='delCo'){
@@ -284,12 +282,9 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
   e.preventDefault();
   if(e.target.id==='authForm'){
-    const em=$('#ae').value.trim(),pw=$('#ap').value,btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
-    try{
-      if(authMode==='up'){const name=$('#an').value.trim().slice(0,30);const cred=await createUserWithEmailAndPassword(auth,em,pw);await updateProfile(cred.user,{displayName:name});myName=name;setStatus()}
-      else await signInWithEmailAndPassword(auth,em,pw);
-      closeSheet();const f=afterSignIn;afterSignIn=null;if(f)setTimeout(f,50);
-    }catch(err){$('#authErr').textContent=errMsg(err);btn.disabled=false}
+    const name=$('#an').value.trim().slice(0,30);if(!name){$('#authErr').textContent='Type your name.';return}
+    myName=name;LS.set('fss_name',name);acct();setStatus();render();
+    closeSheet();const f=afterSignIn;afterSignIn=null;if(f)setTimeout(f,50);
     return}
   if(e.target.id==='addForm'){
     const name=$('#cn').value.trim();if(!name){$('#addErr').textContent='Give it a name.';return}
@@ -301,13 +296,9 @@ document.addEventListener('submit',async e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 $('#q').addEventListener('input',render);$('#sort').addEventListener('change',render);
 
-const setStatus=()=>{$('#status').textContent=me?`Signed in as ${myName||'you'}. Tap a company to rate it — one review per person, post again to update.`:'Tap a company to see its reviews. Sign in to add your company or leave a review.'};
-onAuthStateChanged(auth,u=>{
-  me=u?u.uid:null;myName=u?(u.displayName||myName||(u.email||'').split('@')[0]):'';
-  $('#acctBtn').textContent=u?'Sign out':'Sign in';
-  setStatus();render();
-});
-
+const setStatus=()=>{$('#status').textContent=myName?`Hi ${myName}! Tap a company to rate it — one review per person, post again to update.`:'Tap a company to rate it or add your own. No account needed.'};
+const acct=()=>{$('#acctBtn').textContent=myName?('Name: '+myName):'Set your name'};
+acct();setStatus();
 render();
 let got=0;const timer=setTimeout(()=>{if(got<2)$('#status').textContent='The street is taking a while to load. Check your connection and reload.'},10000);
 const loaded=()=>{if(++got===2){clearTimeout(timer);setStatus()}};
