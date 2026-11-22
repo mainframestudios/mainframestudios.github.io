@@ -128,6 +128,7 @@ textarea{resize:vertical;min-height:90px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app=initializeApp({
@@ -137,8 +138,23 @@ const app=initializeApp({
   storageBucket:"mainframe-hq-5097a.firebasestorage.app",
   messagingSenderId:"922166206069",
   appId:"1:922166206069:web:25009e5830bd74a58f623c"
-});
-const fdb=getFirestore(app);
+},"fivestar"); /* own app name so this sign-in stays separate from HQ */
+const fdb=getFirestore(app), auth=getAuth(app);
+/* quiet behind-the-scenes sign-in: the database only lets in signed-in visitors */
+let authP=null;
+function ensureAuth(){
+  if(auth.currentUser)return Promise.resolve();
+  return authP||(authP=(async()=>{
+    try{await auth.authStateReady()}catch(e){}
+    if(auth.currentUser)return;
+    const em=LS.get('fss_em'),pw=LS.get('fss_pw');
+    if(em&&pw){try{await signInWithEmailAndPassword(auth,em,pw);return}catch(e){}}
+    const npw=Array.from(crypto.getRandomValues(new Uint8Array(18)),b=>b.toString(16).padStart(2,'0')).join('');
+    const nem='fivestar-'+me+'-'+Math.random().toString(36).slice(2,7)+'@example.com';
+    await createUserWithEmailAndPassword(auth,nem,npw);
+    LS.set('fss_em',nem);LS.set('fss_pw',npw);
+  })().finally(()=>{authP=null}));
+}
 const CO="fss_companies", RV="fss_reviews";
 
 const COLORS=['#2b4bf2','#e0344b','#ff7a1a','#0aa5a5','#8a3ffc','#14172b','#d6248f','#1f9d55'];
@@ -164,7 +180,7 @@ let catF='All',myName=LS.get('fss_name')||'',companies=[],reviews=[],openId=null
 }
 
 const errMsg=e=>{const c=e?.code||'';return({
-  'permission-denied':'The database said no (permission-denied).',
+  'permission-denied':'The website’s storage said no (permission-denied).',
   'auth/invalid-email':'That email doesn’t look right.',
   'auth/invalid-credential':'Wrong email or password.',
   'auth/wrong-password':'Wrong password.',
@@ -172,7 +188,8 @@ const errMsg=e=>{const c=e?.code||'';return({
   'auth/email-already-in-use':'That email already has an account. Tap “Sign in”.',
   'auth/weak-password':'Password needs at least 6 characters.',
   'auth/too-many-requests':'Too many tries. Wait a minute and try again.',
-  'auth/network-request-failed':'No internet connection.'
+  'auth/network-request-failed':'No internet connection.',
+  'auth/operation-not-allowed':'The website’s sign-in is turned off in Firebase.'
 })[c]||('Something went wrong ('+(c||e?.message||'unknown')+').')};
 
 const starStr=n=>{const r=Math.round(n);return '<span class="stars" aria-label="'+n.toFixed(1)+' stars">'+'★'.repeat(r)+'<span class="off">'+'★'.repeat(5-r)+'</span></span>'};
@@ -254,7 +271,7 @@ async function saveReview(){
   const btn=$('#saveRev');draft.text=($('#rt')?.value||'').trim();
   if(!draft.stars){$('#revErr').textContent='Pick 1 to 5 stars first.';return}
   btn.disabled=true;
-  try{await setDoc(doc(fdb,RV,openId+'_'+me),{company:openId,by:me,byName:myName,stars:draft.stars,text:draft.text.slice(0,500),at:Date.now()});$('#revErr').textContent='Posted!'}
+  try{await ensureAuth();await setDoc(doc(fdb,RV,openId+'_'+me),{company:openId,by:me,byName:myName,stars:draft.stars,text:draft.text.slice(0,500),at:Date.now()});$('#revErr').textContent='Posted!'}
   catch(e){$('#revErr').textContent='Couldn’t save: '+errMsg(e);btn.disabled=false}
 }
 
@@ -271,11 +288,11 @@ document.addEventListener('click',async e=>{
   if(t.id==='saveRev'){
     if(!myName){draft.text=($('#rt')?.value||'');const id=openId,d={...draft};needSignIn(()=>{openId=id;draft=d;openSheet('');renderDetail()});return}
     saveReview();return}
-  if(t.id==='delRev'){try{await deleteDoc(doc(fdb,RV,openId+'_'+me));draft={for:openId,stars:0,text:''}}catch(err){$('#revErr').textContent='Couldn’t delete: '+errMsg(err)}return}
+  if(t.id==='delRev'){try{await ensureAuth();await deleteDoc(doc(fdb,RV,openId+'_'+me));draft={for:openId,stars:0,text:''}}catch(err){$('#revErr').textContent='Couldn’t delete: '+errMsg(err)}return}
   if(t.id==='delCo'){
     if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to confirm';return}
     const id=openId;closeSheet();
-    try{await deleteDoc(doc(fdb,CO,id))}catch(err){$('#status').textContent='Couldn’t remove it: '+errMsg(err)}
+    try{await ensureAuth();await deleteDoc(doc(fdb,CO,id))}catch(err){$('#status').textContent='Couldn’t remove it: '+errMsg(err)}
   }
 });
 
@@ -289,7 +306,7 @@ document.addEventListener('submit',async e=>{
   if(e.target.id==='addForm'){
     const name=$('#cn').value.trim();if(!name){$('#addErr').textContent='Give it a name.';return}
     const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    try{await setDoc(doc(fdb,CO,id),{name:name.slice(0,40),tagline:$('#ct').value.trim().slice(0,120),cat:$('#cc').value,color:addColor,by:me,byName:myName,at:Date.now()});closeSheet()}
+    try{await ensureAuth();await setDoc(doc(fdb,CO,id),{name:name.slice(0,40),tagline:$('#ct').value.trim().slice(0,120),cat:$('#cc').value,color:addColor,by:me,byName:myName,at:Date.now()});closeSheet()}
     catch(err){$('#addErr').textContent='Couldn’t add it: '+errMsg(err)}
   }
 });
@@ -303,8 +320,11 @@ render();
 let got=0;const timer=setTimeout(()=>{if(got<2)$('#status').textContent='The street is taking a while to load. Check your connection and reload.'},10000);
 const loaded=()=>{if(++got===2){clearTimeout(timer);setStatus()}};
 const failed=e=>{clearTimeout(timer);$('#status').textContent='Couldn’t load the street: '+errMsg(e)};
-onSnapshot(collection(fdb,CO),s=>{companies=s.docs.map(d=>({...d.data(),id:d.id})).filter(c=>c.name);render();loaded()},failed);
-onSnapshot(collection(fdb,RV),s=>{reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.company);render();loaded()},failed);
+(async()=>{
+  try{await ensureAuth()}catch(e){clearTimeout(timer);$('#status').textContent='Couldn’t connect: '+errMsg(e);return}
+  onSnapshot(collection(fdb,CO),s=>{companies=s.docs.map(d=>({...d.data(),id:d.id})).filter(c=>c.name);render();loaded()},failed);
+  onSnapshot(collection(fdb,RV),s=>{reviews=s.docs.map(d=>({...d.data(),id:d.id})).filter(r=>r.company);render();loaded()},failed);
+})();
 </script>
 </body>
 </html>
