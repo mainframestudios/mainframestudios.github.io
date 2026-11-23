@@ -77,7 +77,8 @@ button,input,select,textarea{font:inherit;font-size:16px;color:inherit}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
 @media(prefers-reduced-motion:reduce){.sheet{animation:none}.shop{transition:none}}
 .shead{display:flex;gap:14px;align-items:center;justify-content:space-between}
-.shead h2{font-size:clamp(26px,5vw,34px)}
+.shead h2{font-size:clamp(24px,5vw,34px);overflow-wrap:anywhere}
+.logo{flex:none}
 .x{width:44px;height:44px;border-radius:50%;border:0;background:var(--soft);cursor:pointer;font-size:22px;flex:none}
 label{display:block;font-weight:600;margin:14px 0 6px}
 .f input,.f select,.f textarea{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card)}
@@ -111,7 +112,7 @@ textarea{resize:vertical;min-height:90px}
   <div class="hero">
     <h1>Five Star Street <span class="st">★★★★★</span></h1>
     <p>Put your company on the street. Everyone else can stop by, rate it and leave a review.</p>
-    <div class="hrow"><button class="btn" id="addBtn">+ Add your company</button><button class="btn ghost acct" id="acctBtn">Set your name</button><div class="counts"><span><b id="nC">0</b> companies</span><span><b id="nR">0</b> reviews</span></div></div>
+    <div class="hrow"><button class="btn" id="addBtn">+ Add your company</button><button class="btn ghost acct" id="acctBtn">Set your name</button></div>
   </div>
   <svg class="street" id="street" viewBox="0 0 1200 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
   <div class="road"></div>
@@ -200,7 +201,7 @@ const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').
 
 function render(){
   const q=$('#q').value.trim().toLowerCase(),sort=$('#sort').value;
-  $('#nC').textContent=companies.length;$('#nR').textContent=reviews.filter(r=>companies.some(c=>c.id===r.company)).length;
+  
   $('#chips').innerHTML=['All',...CATS].map(c=>`<button data-cat="${c}" aria-pressed="${c===catF}">${c}</button>`).join('');
   let list=companies.filter(c=>catF==='All'||(c.cat||'Other')===catF).filter(c=>!q||(c.name+' '+(c.tagline||'')+' '+(c.cat||'')).toLowerCase().includes(q)).map(c=>({...c,...stats(c.id)}));
   list.sort({top:(a,b)=>b.avg-a.avg||b.n-a.n,new:(a,b)=>(b.at||0)-(a.at||0),most:(a,b)=>b.n-a.n,az:(a,b)=>a.name.localeCompare(b.name)}[sort]);
