@@ -256,7 +256,7 @@ function renderDetail(){
   <p class="by">${esc(c.cat||'Other')} · added by ${esc(nm(c.by,c.byName))}</p>
   ${c.tagline?`<p>${esc(c.tagline)}</p>`:''}
   <div class="big"><div><div class="avg">${n?avg.toFixed(1):'–'}</div>${starStr(avg)}<div class="cat">${n} review${n===1?'':'s'}</div></div><div class="dist">${dist}</div></div>
-  ${me&&c.by===me?'<p class="by">This is your company, so you can’t rate it. Send people the link so they can.</p>':`
+  ${me&&c.by===me?'':`
   <h3 style="font-size:22px">${mine?'Your review':'Rate it'}</h3>
   <div class="pick" role="radiogroup" aria-label="Stars">${[1,2,3,4,5].map(s=>`<button type="button" data-star="${s}" class="${s<=draft.stars?'on':''}" aria-label="${s} star${s>1?'s':''}" aria-checked="${s===draft.stars}" role="radio">★</button>`).join('')}</div>
   <div class="f"><label for="rt">Review <span class="cat">(optional)</span></label><textarea id="rt" maxlength="500" placeholder="What was it like?">${esc(draft.text)}</textarea></div>
