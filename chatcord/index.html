@@ -179,7 +179,9 @@ function shrink(file,max){return new Promise((res,rej)=>{
  const img=new Image(),u=URL.createObjectURL(file);
  img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",.8))};
  img.onerror=()=>rej(new Error("Couldn't read that picture"));img.src=u})}
-function ask(q,cb){$("mq").textContent=q;$("mi").value="";$("modal").style.display="grid";$("mi").focus();
+function sure(q,cb){$("mq").textContent=q;$("mi").hidden=true;$("mo").textContent="Yes";$("mc").textContent="No";$("modal").style.display="grid";
+ $("mo").onclick=()=>{$("modal").style.display="none";cb()};$("mc").onclick=()=>$("modal").style.display="none";}
+function ask(q,cb){$("mq").textContent=q;$("mi").hidden=false;$("mo").textContent="OK";$("mc").textContent="Cancel";$("mi").value="";$("modal").style.display="grid";$("mi").focus();
  $("mo").onclick=()=>{const v=$("mi").value.trim();if(v){$("modal").style.display="none";cb(v)}};
  $("mc").onclick=()=>$("modal").style.display="none";}
 async function save(sid,fn){const d=structuredClone(servers[sid]);fn(d);try{await db.doc("servers/"+sid).set(d)}catch(e){note("Couldn't save: "+e.code)}}
@@ -300,11 +302,11 @@ document.body.addEventListener("click",async e=>{
  else if(a=="discover"){view="discover";syncSub();render()}
  else if(a=="chan"){curCh=cid;view="chat";syncSub();render()}
  else if(a=="members"){view="members";syncSub();render()}
- else if(a=="newServer")ask("Name your server",async n=>{
+ else if(a=="newServer")sure("Are you sure you want to make a server?",()=>ask("Name your server",async n=>{
   const c=newId(),t=Date.now();
   try{const ref=await db.collection("servers").add({name:n,owner:me,t,members:{[me]:"owner"},modOf:{},reqs:{},pend:{},chans:{[c]:{name:"general",t}}});
    servers[ref.id]=servers[ref.id]||{name:n,owner:me,t,members:{[me]:"owner"},modOf:{},reqs:{},pend:{},chans:{[c]:{name:"general",t}}};openServer(ref.id)}
-  catch(err){note("Couldn't make it: "+err.code)}})
+  catch(err){note("Couldn't make it: "+err.code)}}))
  else if(a=="join")upd(el.dataset.s,{reqs:{[me]:Date.now()}});
  else if(a=="newChan")ask("Name the new chat",n=>upd(cur,{chans:{[newId()]:{name:n.toLowerCase().replace(/\s+/g,"-"),t:Date.now()}}}));
  else if(a=="delChan"){e.stopPropagation();
