@@ -46,8 +46,16 @@ form[hidden]{display:none}#gifbox{padding:0 8px 8px}#gifbox[hidden]{display:none
 @keyframes wob{25%{transform:skewX(15deg)}75%{transform:skewX(-15deg)}}@keyframes rain{0%{transform:translateY(-20px);opacity:0}50%{opacity:1}100%{transform:translateY(20px);opacity:0}}
 @keyframes rgb{0%{color:#ed4245}33%{color:#23a55a}66%{color:#00a8fc}}
 #err{color:#ff8a8a}
-#gate{position:fixed;inset:0;background:#313338;display:grid;place-items:center;text-align:center;padding:24px;z-index:9}
-#gate h1{color:#fff;font-size:40px;margin:0 0 8px}#gate p{color:#b5bac1;margin:0 0 18px}#gate button{font-size:17px;padding:12px 22px}
+#gate{position:fixed;inset:0;background:radial-gradient(circle at 30% 20%,#5865f2,transparent 55%),radial-gradient(circle at 80% 85%,#eb459e,transparent 50%),#1e1f22;display:grid;place-items:center;text-align:center;padding:24px;z-index:9;overflow:hidden}
+.gbox{position:relative;background:#313338e6;border-radius:20px;padding:32px 28px;box-shadow:0 20px 60px #0008;width:min(340px,100%)}
+.logo{width:92px;height:92px;margin:-70px auto 12px;border-radius:26px;background:#5865f2;display:grid;place-items:center;box-shadow:0 10px 30px #5865f288;animation:bob 2.4s ease-in-out infinite}
+#gate h1{color:#fff;font-size:42px;margin:0 0 6px;letter-spacing:-1px}#gate p{color:#b5bac1;margin:0 0 22px}
+#signin{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#1f1f1f;font-weight:600;font-size:16px;padding:12px 22px;border-radius:24px;min-height:48px;box-shadow:0 4px 14px #0005}
+#signin:active{transform:scale(.97)}
+.bub{position:absolute;border-radius:18px 18px 18px 4px;background:#ffffff14;animation:float 9s linear infinite}
+.b1{width:90px;height:44px;left:8%;bottom:-60px}.b2{width:130px;height:54px;left:60%;bottom:-80px;animation-delay:-3s}.b3{width:70px;height:36px;left:35%;bottom:-60px;animation-delay:-6s}.b4{width:110px;height:48px;left:80%;bottom:-70px;animation-delay:-1.5s}
+@keyframes float{to{transform:translateY(-120vh)}}@keyframes bob{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.bub,.logo{animation:none}}
 .m{display:flex;gap:10px}.mb{flex:1}.m .x{position:static;margin-left:4px}.tx{margin-top:2px}.rx:empty{display:none}
 .av{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;overflow:hidden;cursor:pointer;background:#5865f2}
 .av img{width:100%;height:100%;object-fit:cover}.av.big{width:84px;height:84px;font-size:32px;border:5px solid #2b2d31;margin-top:-42px}
@@ -72,7 +80,10 @@ form[hidden]{display:none}#gifbox{padding:0 8px 8px}#gifbox[hidden]{display:none
 <div class="note" id="note">Loading…</div>
 <form id="f" hidden><input id="i" placeholder="Message" autocomplete="off"><button type="button" id="gifBtn" class="g" title="Send a photo" hidden>📷 Photo</button><button type="button" id="gifPick" class="g">GIF</button><button type="submit">Send</button></form><div id="gifbox" hidden><div id="gifhead">Pick a GIF<button type="button" class="g" id="gifClose">✕ Close</button></div><div id="gifs"></div></div><input type="file" id="file" accept="image/*" hidden></main>
 <div id="card" data-a="closeCard"></div><div id="modal"><div><p id="mq"></p><input id="mi" maxlength="30"><div class="bt"><button class="g" id="mc">Cancel</button><button id="mo">OK</button></div></div></div>
-<div id="gate"><div><h1>Chatcord</h1><p id="gmsg">Sign in to start chatting.</p><button id="signin">Sign in with Google</button></div></div>
+<div id="gate"><div class="bub b1"></div><div class="bub b2"></div><div class="bub b3"></div><div class="bub b4"></div>
+<div class="gbox"><div class="logo"><svg viewBox="0 0 64 64" width="64" height="64"><path d="M12 14h40a6 6 0 0 1 6 6v22a6 6 0 0 1-6 6H30l-10 9v-9h-8a6 6 0 0 1-6-6V20a6 6 0 0 1 6-6z" fill="#fff"/><circle cx="23" cy="31" r="4" fill="#5865f2"/><circle cx="41" cy="31" r="4" fill="#5865f2"/></svg></div>
+<h1>Chatcord</h1><p id="gmsg">Make servers. Pick your crew. Chat.</p>
+<button id="signin"><svg viewBox="0 0 48 48" width="22" height="22"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Sign in with Google</span></button></div></div>
 <script type="module">
 // ===== PASTE YOUR FIREBASE CONFIG HERE (Firebase console > Project settings > Your apps > Web app) =====
 const firebaseConfig = {
