@@ -73,6 +73,38 @@ form[hidden]{display:none}#gifbox{padding:0 8px 8px}#gifbox[hidden]{display:none
 #card{position:fixed;inset:0;background:#000a;display:none;place-items:center;padding:16px}
 #card .pcard{width:min(320px,100%)}
 @media(max-width:600px){#side{width:100px}#side h3{font-size:13px}form{padding:0 8px 10px}#body{padding:10px 8px}#servers{width:56px}.sv{width:40px;height:40px}}
+
+/* ===== glow-up theme ===== */
+body{background:#1a1b1e}
+main{background:radial-gradient(circle at 100% 0%,#5865f222,transparent 45%),radial-gradient(circle at 0% 100%,#eb459e18,transparent 45%),#2b2d31}
+#servers{background:#111214;gap:10px;padding-top:14px}
+.sv{background:#2b2d31;transition:border-radius .2s,background .2s,transform .15s;box-shadow:0 2px 8px #0006}
+.sv:active{transform:scale(.92)}
+.sv.on{background:linear-gradient(135deg,#5865f2,#8b5cf6);border-radius:16px;box-shadow:0 4px 16px #5865f277}
+.sv.add{background:#23a55a22;color:#23a55a}.sv.add:hover,.sv.add:active{background:#23a55a;color:#fff}
+#side{background:#1e1f22;border-right:1px solid #ffffff0d}
+#side h3{font-size:17px;letter-spacing:-.3px}
+.ch{margin:2px 0;transition:background .15s}.ch:active{background:#35373c}
+.ch.on{background:linear-gradient(90deg,#5865f244,#5865f211);color:#fff;box-shadow:inset 3px 0 0 #5865f2}
+header{background:#2b2d31cc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #ffffff12;font-size:18px;letter-spacing:-.3px}
+button{border-radius:10px;font-weight:600;transition:transform .1s,filter .15s}button:active{transform:scale(.96)}
+button:not(.g):not(.r):not(.x):not(.chip):not(#signin){background:linear-gradient(135deg,#5865f2,#7c5cf6)}
+button.g{background:#3a3c42}button.r{background:linear-gradient(135deg,#ed4245,#c22f32)}
+.row{background:#ffffff0a;border:1px solid #ffffff10;border-radius:14px;padding:12px 14px;backdrop-filter:blur(6px)}
+.row b{font-size:16px;color:#fff}
+.sicon{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:19px}
+.empty{text-align:center;padding:48px 16px;color:#b5bac1}
+.empty .big{font-size:22px;font-weight:800;color:#fff;margin:14px 0 6px}
+.empty svg{animation:bob 2.4s ease-in-out infinite}
+.empty button{margin-top:18px;padding:12px 22px}
+.m{padding:6px 8px;border-radius:10px;margin:0 -8px 6px}.m:hover{background:#ffffff08}
+.av{box-shadow:0 2px 6px #0005}
+form input{background:#383a40;border:1px solid #ffffff12;border-radius:12px}
+form input:focus{border-color:#5865f2;box-shadow:0 0 0 3px #5865f244}
+.pcard{border:1px solid #ffffff12;box-shadow:0 12px 40px #0006;border-radius:16px}
+.banner{background-image:linear-gradient(135deg,#ffffff33,transparent)!important}
+.role{color:#b5bac1}
+#modal div{border-radius:16px;border:1px solid #ffffff14;box-shadow:0 20px 60px #0008}
 </style></head><body>
 <nav id="servers"></nav>
 <aside id="side"></aside>
@@ -164,9 +196,10 @@ function renderDiscover(){
  const list=Object.entries(servers).sort((a,b)=>b[1].t-a[1].t);
  $("body").innerHTML=list.length?list.map(([id,s])=>{
   const mem=roleOf(id,me),req=s.reqs?.[me];
-  return `<div class="row"><div class="n"><b>${esc(s.name)}</b><br><small>${Object.keys(s.members||{}).length} members</small></div>${
+  const hue=[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
+  return `<div class="row"><div class="sicon" style="background:linear-gradient(135deg,hsl(${hue} 70% 55%),hsl(${(hue+50)%360} 70% 45%))">${esc((s.name||"?")[0].toUpperCase())}</div><div class="n"><b>${esc(s.name)}</b><br><small>${Object.keys(s.members||{}).length} members</small></div>${
    mem?`<button data-a="open" data-s="${esc(id)}">Open</button>`:req?`<button class="g" disabled>Requested</button>`:`<button data-a="join" data-s="${esc(id)}">Request to join</button>`}</div>`}).join("")
- :`<div class="note" style="padding:0">There are no servers yet. Tap + to make the first one.</div>`;
+ :`<div class="empty"><svg viewBox="0 0 64 64" width="84" height="84"><rect x="4" y="4" width="56" height="56" rx="18" fill="#5865f2"/><path d="M18 20h28a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H32l-7 6v-6h-7a4 4 0 0 1-4-4V24a4 4 0 0 1 4-4z" fill="#fff"/><circle cx="26" cy="31" r="3" fill="#5865f2"/><circle cx="38" cy="31" r="3" fill="#5865f2"/></svg><div class="big">No servers yet</div><div>Be the first. Make one and you're the owner.</div><button data-a="newServer">+ Make a server</button></div>`;
 }
 async function renderMembers(){
  const s=S(),r=myR(),mems=Object.entries(s.members||{}).sort((a,b)=>R[b[1]]-R[a[1]]),reqs=Object.keys(s.reqs||{}),pend=Object.entries(s.pend||{});
