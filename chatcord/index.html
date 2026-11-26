@@ -105,9 +105,22 @@ form input:focus{border-color:#5865f2;box-shadow:0 0 0 3px #5865f244}
 .banner{background-image:linear-gradient(135deg,#ffffff33,transparent)!important}
 .role{color:#b5bac1}
 #modal div{border-radius:16px;border:1px solid #ffffff14;box-shadow:0 20px 60px #0008}
+
+#side{display:flex;flex-direction:column;padding:12px 8px 10px;background:linear-gradient(180deg,#1e1f22,#1a1b2a)}
+#sideTop{flex:1;overflow-y:auto}
+#side h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand{display:flex;align-items:center;gap:8px;margin:0 4px 14px}.brand b{color:#fff;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tip{margin:0 4px 8px;padding:10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff0d;font-size:13px;color:#b5bac1}
+.tip b{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+#mecard{display:flex;align-items:center;gap:8px;padding:8px;border-radius:14px;background:#111214;border:1px solid #ffffff10;cursor:pointer;margin-top:8px}
+#mecard .av{width:34px;height:34px;font-size:14px}
+#mecard .who{min-width:0}#mecard .who b{display:block;color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mecard .who small{display:block;color:#949ba4;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:10px;height:10px;border-radius:50%;background:#23a55a;border:2px solid #111214;margin:-12px 0 0 -14px;flex:none;align-self:flex-end}
+.sv.mebtn{padding:0;overflow:hidden}.sv.mebtn .av{width:100%;height:100%;box-shadow:none}
 </style></head><body>
 <nav id="servers"></nav>
-<aside id="side"></aside>
+<aside id="side"><div id="sideTop"></div><div id="mecard" data-a="profile"></div></aside>
 <main><header id="head">Chatcord</header><div id="body"></div>
 <div class="note" id="note">Loading…</div>
 <form id="f" hidden><input id="i" placeholder="Message" autocomplete="off"><button type="button" id="gifBtn" class="g" title="Send a photo" hidden>📷 Photo</button><button type="button" id="gifPick" class="g">GIF</button><button type="submit">Send</button></form><div id="gifbox" hidden><div id="gifhead">Pick a GIF<button type="button" class="g" id="gifClose">✕ Close</button></div><div id="gifs"></div></div><input type="file" id="file" accept="image/*" hidden></main>
@@ -171,14 +184,18 @@ function render(){renderBar();renderSide();renderMain()}
 function renderBar(){
  const mine=Object.entries(servers).filter(([id])=>roleOf(id,me));
  $("servers").innerHTML=mine.map(([id,s])=>`<div class="sv${id==cur?" on":""}" data-a="open" data-s="${esc(id)}" title="${esc(s.name)}">${esc((s.name||"?")[0].toUpperCase())}</div>`).join("")
- +`<div class="sv add" data-a="newServer" title="Make a server">+</div><div class="sv find${view=="profile"?" on":""}" data-a="profile">Me</div><div class="sv find${view=="discover"?" on":""}" data-a="discover">Find</div>`;
+ +`<div class="sv add" data-a="newServer" title="Make a server">+</div><div class="sv mebtn${view=="profile"?" on":""}" data-a="profile" title="My profile">${me?av(me,{}).replace('data-a="prof"',''):"Me"}</div><div class="sv find${view=="discover"?" on":""}" data-a="discover">Find</div>`;
+}
+function renderMe(){
+ if(!me){$("mecard").innerHTML="";return}const p=profiles[me]||{};
+ $("mecard").innerHTML=av(me,{}).replace('data-a="prof"','')+`<span class="dot"></span><div class="who"><b>${esc(dn({},me))}</b><small>${esc(p.status||"Online")}</small></div>`;
 }
 function renderSide(){
- const s=S();
- if(!s||view=="discover"||view=="profile"){$("side").innerHTML=`<h3>Chatcord</h3><div class="role">Find a server or make one with +</div>`;return}
+ renderMe();const s=S();
+ if(!s||view=="discover"||view=="profile"){$("sideTop").innerHTML=`<div class="brand"><svg viewBox="0 0 64 64" width="28" height="28"><rect width="64" height="64" rx="18" fill="#5865f2"/><path d="M16 18h32a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H32l-8 7v-7h-8a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z" fill="#fff"/></svg><b>Chatcord</b></div><div class="tip"><b>+ Make</b>Start your own server</div><div class="tip"><b>Find</b>Ask to join one</div>`;return}
  const r=myR(),pend=s.pend||{},reqN=Object.keys(s.reqs||{}).length,pendN=Object.keys(pend).length;
  const alerts=(r>=3?reqN:0)+(r==5?pendN:0);
- $("side").innerHTML=`<h3>${esc(s.name)}</h3><div class="role">You: ${RN[roleOf(cur,me)]}</div>`+
+ $("sideTop").innerHTML=`<h3>${esc(s.name)}</h3><div class="role">You: ${RN[roleOf(cur,me)]}</div>`+
  chans(s).map(([id,c])=>`<div class="ch${id==curCh&&view=="chat"?" on":""}" data-a="chan" data-c="${esc(id)}"><span># ${esc(c.name)}${pend[id]?" (delete?)":""}</span>${r>=4&&!(r==4&&pend[id])?`<button class="x" data-a="delChan" data-c="${esc(id)}" title="Delete chat">×</button>`:""}</div>`).join("")+
  (r>=4?`<button class="side-btn g" data-a="newChan">+ New chat</button>`:"")+
  `<button class="side-btn g" data-a="members">Members${alerts?`<span class="badge">${alerts}</span>`:""}</button>`;
@@ -340,7 +357,7 @@ render();
 let started=false;
 function start(){
  if(started)return;started=true;
- db.collection("profiles").onSnapshot(snap=>{profiles={};snap.docs.forEach(d=>profiles[d.id]=d.data());if(view=="chat")renderMsgs();else if(view=="members")renderMembers();renderBar()},()=>{});
+ db.collection("profiles").onSnapshot(snap=>{profiles={};snap.docs.forEach(d=>profiles[d.id]=d.data());if(view=="chat")renderMsgs();else if(view=="members")renderMembers();renderBar();renderMe()},()=>{});
  db.collection("servers").onSnapshot(snap=>{
   note("");
   servers={};snap.docs.forEach(d=>servers[d.id]=d.data());
