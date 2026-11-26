@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Chatcord"><meta name="theme-color" content="#1e1f22">
 <title>Chatcord</title>
 <style>
 *{box-sizing:border-box;min-width:0}
@@ -118,6 +121,8 @@ form input:focus{border-color:#5865f2;box-shadow:0 0 0 3px #5865f244}
 #mecard .who small{display:block;color:#949ba4;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dot{width:10px;height:10px;border-radius:50%;background:#23a55a;border:2px solid #111214;margin:-12px 0 0 -14px;flex:none;align-self:flex-end}
 .sv.mebtn{padding:0;overflow:hidden}.sv.mebtn .av{width:100%;height:100%;box-shadow:none}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+form{padding-bottom:calc(16px + env(safe-area-inset-bottom))}#side,#servers{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
 </style></head><body>
 <nav id="servers"></nav>
 <aside id="side"><div id="sideTop"></div><div id="mecard" data-a="profile"></div></aside>
@@ -371,7 +376,7 @@ else{
  const app=initializeApp(firebaseConfig);fs=getFirestore(app);auth=getAuth(app);
  db={collection:p=>C(collection(fs,p)),doc:p=>D(doc(fs,p))};
  $("gifBtn").hidden=false;
- $("signin").onclick=async()=>{const pr=new GoogleAuthProvider();try{await signInWithPopup(auth,pr)}catch(e){if(e.code=="auth/popup-blocked")signInWithRedirect(auth,pr);else $("gmsg").textContent="Sign-in failed: "+e.code}};
+ $("signin").onclick=async()=>{const pr=new GoogleAuthProvider();try{await signInWithPopup(auth,pr)}catch(e){if(e.code!="auth/popup-closed-by-user"&&e.code!="auth/cancelled-popup-request")signInWithRedirect(auth,pr);else $("gmsg").textContent="Sign-in failed: "+e.code}};
  onAuthStateChanged(auth,u=>{if(u){me=u.uid;$("gate").style.display="none";start()}else{$("gate").style.display="grid"}});
 }
 }
