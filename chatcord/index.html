@@ -292,7 +292,7 @@ function syncSub(){
  if(!k)return;
  timer=setTimeout(()=>note("Can't reach the chat yet…"),10000);
  unsub=msgCol().orderBy("t","desc").limit(100).onSnapshot(snap=>{
-  if(!snap.metadata.fromCache){clearTimeout(timer);note("")}
+  clearTimeout(timer);note("");
   msgs=snap.docs.map(d=>({...d.data(),id:d.id}));renderMsgs();
  },e=>{clearTimeout(timer);note("Chat error: "+e.code)});
 }
