@@ -123,6 +123,10 @@ form input:focus{border-color:#5865f2;box-shadow:0 0 0 3px #5865f244}
 .sv.mebtn{padding:0;overflow:hidden}.sv.mebtn .av{width:100%;height:100%;box-shadow:none}
 body{height:100dvh;padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}#servers{padding-top:max(14px,calc(env(safe-area-inset-top) + 8px))}#side{padding-top:max(12px,calc(env(safe-area-inset-top) + 8px))}header{padding-top:max(12px,calc(env(safe-area-inset-top) + 8px))}
 form{padding-bottom:calc(16px + env(safe-area-inset-bottom))}#side,#servers{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.rwrap{position:relative;display:inline-block}
+.pick{position:absolute;left:0;bottom:calc(100% + 6px);z-index:5;display:flex;gap:2px;padding:6px;margin:0;background:#111214;border:1px solid #ffffff1a;border-radius:24px;box-shadow:0 8px 24px #0009;white-space:nowrap}
+.pick .chip{border:0;background:none;font-size:22px;padding:2px 6px;min-height:36px}.pick .chip:active{transform:scale(1.3)}
+.rx:empty{display:flex}
 </style></head><body>
 <nav id="servers"></nav>
 <aside id="side"><div id="sideTop"></div><div id="mecard" data-a="profile"></div></aside>
@@ -162,7 +166,7 @@ const chans=s=>Object.entries(s?.chans||{}).sort((a,b)=>a[1].t-b[1].t);
 const names=async ids=>({});
 const nm=(ps,u)=>"User-"+String(u||"").replace(/[^a-z0-9]/gi,"").slice(-4).toUpperCase();
 const COLORS=["#5865f2","#eb459e","#ed4245","#f0b232","#23a55a","#00a8fc","#9b59b6","#e67e22","#1abc9c","#ffffff"];
-const EM=["👍","😂","🔥","❤️","😮","💀"];
+const EM=["👍","😭","🔥","❤️","😮","💀"];
 const dn=(ps,u)=>profiles[u]?.nick||nm(ps,u);
 const blob=u=>typeof u=="string"&&/^data:image\/(png|jpeg|gif|webp);base64,/.test(u)?u:"";
 const av=(u,ps,cls="")=>{const p=profiles[u]||{};return `<div class="av ${cls}" data-a="prof" data-u="${esc(u)}" style="background:${esc(p.color||"#5865f2")}">${p.avatar?`<img src="${blob(p.avatar)}" alt="">`:esc((dn(ps,u)||"?")[0].toUpperCase())}</div>`};
@@ -258,8 +262,7 @@ async function renderMsgs(){
   return `<div class="m">${m.bot?`<div class="av" style="background:#d97757">C</div>`:av(m.uid,ps)}<div class="mb"><div>
   <b ${m.bot?'class="bot"':`data-a="prof" data-u="${esc(m.uid)}" style="cursor:pointer;color:${esc(p.color||"#fff")}"`}>${esc(m.bot?"Claude":dn(ps,m.uid))}</b>${m.bot?'<span class="tag">BOT</span>':rr&&rr!="normal"?`<span class="tag">${RN[rr]}</span>`:""}<small>${new Date(m.t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</small>${canMod||m.uid===me?`<button class="x" data-a="delMsg" data-m="${esc(m.id)}" title="Delete">×</button>`:""}</div>
   ${m.text?`<div class="tx">${esc(m.text)}</div>`:""}${m.img?`<img class="att" src="${blob(m.img)}" alt="">`:""}${m.gif!=null?gifHtml(+m.gif,1):""}
-  <div class="rx">${rx}<button class="chip add" data-a="rpick" data-m="${esc(m.id)}">+😀</button></div>
-  <div class="pick" data-p="${esc(m.id)}" hidden>${EM.map((em,i)=>`<button class="chip" data-a="react" data-m="${esc(m.id)}" data-e="${i}">${em}</button>`).join("")}</div></div></div>`}).join("")
+  <div class="rx">${rx}<span class="rwrap"><button class="chip add" data-a="rpick" data-m="${esc(m.id)}">+😀</button><div class="pick" data-p="${esc(m.id)}" hidden>${EM.map((em,i)=>`<button class="chip" data-a="react" data-m="${esc(m.id)}" data-e="${i}">${em}</button>`).join("")}</div></span></div></div></div>`}).join("")
  :'<div class="note" style="padding:0">No messages yet. Say something!</div>';
  if(atBot||list.length!=lastN)box.scrollTop=box.scrollHeight;lastN=list.length;
 }
